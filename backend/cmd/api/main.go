@@ -11,6 +11,7 @@ import (
 	"github.com/livecreator/backend/internal/config"
 	"github.com/livecreator/backend/internal/db"
 	httpSrv "github.com/livecreator/backend/internal/http"
+	"github.com/livecreator/backend/internal/payment"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -55,8 +56,20 @@ func main() {
 	defer rdb.Close()
 	log.Println("✓ Redis verbunden")
 
+	// ===== Payment Provider =====
+	var paymentProvider payment.Provider
+	switch cfg.PaymentProvider {
+	case "mock", "":
+		// Bei Mock zeigt die Confirm-URL auf das Backend selbst
+		backendURL := "http://localhost:" + cfg.AppPort
+		paymentProvider = payment.NewMockProvider(backendURL)
+	default:
+		log.Fatalf("Unbekannter Payment-Provider: %s", cfg.PaymentProvider)
+	}
+	log.Printf("✓ Payment-Provider: %s", paymentProvider.Name())
+
 	// ===== HTTP-Server =====
-	srv := httpSrv.NewServer(cfg, pool, rdb)
+	srv := httpSrv.NewServer(cfg, pool, rdb, paymentProvider)
 	app := srv.SetupRouter()
 
 	// Graceful shutdown

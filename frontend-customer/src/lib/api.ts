@@ -1,5 +1,4 @@
 // Lightweight API-Client mit Auto-Refresh.
-// Speichert Tokens in localStorage. (Für Production: HTTP-only-Cookies erwägen.)
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -64,7 +63,6 @@ export async function api<T = any>(
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
-  // 401 → einmal refreshen, dann erneut versuchen
   if (res.status === 401 && !retried && getRefreshToken()) {
     try {
       await refreshAccessToken();
@@ -88,7 +86,7 @@ export async function api<T = any>(
   return res.json();
 }
 
-// === Convenience-Endpoints ===
+// === Auth ===
 
 export interface RegisterCreatorInput {
   email: string;
@@ -143,4 +141,55 @@ export async function logout(): Promise<void> {
 
 export async function getMe(): Promise<any> {
   return api('/api/auth/me');
+}
+
+// === Wallet ===
+
+export interface CoinPackage {
+  id: string;
+  name: string;
+  coins: number;
+  price_cents: number;
+  currency: string;
+}
+
+export async function getWallet(): Promise<{ balance_coins: number }> {
+  return api('/api/wallet/');
+}
+
+export async function getPackages(): Promise<{ packages: CoinPackage[] }> {
+  return api('/api/wallet/packages');
+}
+
+export async function getHistory(): Promise<{ history: any[] }> {
+  return api('/api/wallet/history');
+}
+
+export async function getPurchases(): Promise<{ purchases: any[] }> {
+  return api('/api/wallet/purchases');
+}
+
+export interface PurchaseResponse {
+  purchase_id: string;
+  redirect_url: string;
+  status: string;
+  coins: number;
+  price_cents: number;
+  currency: string;
+}
+
+export async function startPurchase(packageId: string): Promise<PurchaseResponse> {
+  return api('/api/wallet/purchase', {
+    method: 'POST',
+    body: JSON.stringify({ package_id: packageId }),
+  });
+}
+
+// === Helpers ===
+
+export function formatCents(cents: number, currency: string = 'EUR'): string {
+  return new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency,
+  }).format(cents / 100);
 }

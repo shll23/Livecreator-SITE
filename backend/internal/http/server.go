@@ -9,17 +9,27 @@ import (
 	"github.com/livecreator/backend/internal/auth"
 	"github.com/livecreator/backend/internal/config"
 	"github.com/livecreator/backend/internal/models"
+	"github.com/livecreator/backend/internal/payment"
+	"github.com/livecreator/backend/internal/wallet"
 	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
-	cfg   *config.Config
-	db    *pgxpool.Pool
-	redis *redis.Client
+	cfg     *config.Config
+	db      *pgxpool.Pool
+	redis   *redis.Client
+	wallet  *wallet.Service
+	payment payment.Provider
 }
 
-func NewServer(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) *Server {
-	return &Server{cfg: cfg, db: db, redis: rdb}
+func NewServer(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client, pp payment.Provider) *Server {
+	return &Server{
+		cfg:     cfg,
+		db:      db,
+		redis:   rdb,
+		wallet:  wallet.NewService(db),
+		payment: pp,
+	}
 }
 
 // requireAuth: Middleware die JWT validiert und user_id + role in c.Locals legt.

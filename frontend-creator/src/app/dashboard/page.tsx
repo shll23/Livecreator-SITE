@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getMe, logout, getAccessToken, APIError } from '@/lib/api';
+import { getMe, getAccessToken, APIError } from '@/lib/api';
+import { Header } from '@/components/Header';
 
 interface MeResponse {
   user_id: string;
@@ -11,6 +12,7 @@ interface MeResponse {
   handle: string;
   display_name: string;
   message_price_coins: number;
+  revenue_share_bps: number;
   is_verified: boolean;
 }
 
@@ -38,65 +40,121 @@ export default function DashboardPage() {
     })();
   }, [router]);
 
-  async function handleLogout() {
-    await logout();
-    router.replace('/login');
-  }
-
-  if (error) {
-    return <div className="p-8 text-red-600">{error}</div>;
-  }
-
+  if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!me) {
-    return <div className="p-8 text-zinc-500">Lade…</div>;
+    return (
+      <div className="min-h-screen bg-mesh">
+        <Header />
+        <div className="p-8 text-zinc-500">Lade…</div>
+      </div>
+    );
   }
+
+  const initials = me.display_name
+    .split(' ')
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="font-bold tracking-tight">Creator Studio</div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">@{me.handle}</span>
-            <button
-              onClick={handleLogout}
-              className="rounded-lg px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            >
-              Abmelden
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-mesh">
+      <Header />
 
       <main className="mx-auto max-w-6xl p-4 md:p-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Hi, {me.display_name} 👋</h1>
-          <p className="mt-1 text-sm text-zinc-500">Willkommen in deinem Studio.</p>
-        </div>
+        {/* Welcome Hero */}
+        <section className="mb-10 animate-fade-up">
+          <div className="flex items-center gap-5">
+            <div className="grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-2xl font-bold text-white shadow-pink">
+              {initials}
+            </div>
+            <div>
+              <h1 className="font-display text-4xl font-bold tracking-tight">
+                Hi, {me.display_name}
+              </h1>
+              <p className="mt-1 text-zinc-500">
+                <span className="font-medium text-zinc-700">@{me.handle}</span> · Willkommen in deinem Studio
+              </p>
+            </div>
+          </div>
+        </section>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs uppercase tracking-wide text-zinc-500">Nachrichten-Preis</div>
-            <div className="mt-1 text-2xl font-bold">{me.message_price_coins} Coins</div>
-            <div className="mt-1 text-xs text-zinc-500">pro Kunden-Nachricht</div>
-          </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs uppercase tracking-wide text-zinc-500">Status</div>
-            <div className="mt-1 text-2xl font-bold">{me.is_verified ? '✓ Verifiziert' : 'Aktiv'}</div>
-          </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs uppercase tracking-wide text-zinc-500">Email</div>
-            <div className="mt-1 truncate text-base font-medium">{me.email}</div>
-          </div>
-        </div>
+        {/* Stats */}
+        <section className="mb-10 grid gap-4 md:grid-cols-3">
+          <StatCard
+            label="Nachrichten-Preis"
+            value={`${me.message_price_coins}`}
+            unit="Coins"
+            sub="pro Kunden-Nachricht"
+            delay={60}
+          />
+          <StatCard
+            label="Dein Anteil"
+            value={`${(me.revenue_share_bps / 100).toFixed(1)}%`}
+            unit=""
+            sub="vom Coin-Umsatz"
+            delay={120}
+            highlight
+          />
+          <StatCard
+            label="Status"
+            value={me.is_verified ? 'Verifiziert' : 'Aktiv'}
+            unit={me.is_verified ? '✓' : ''}
+            sub={me.email}
+            delay={180}
+          />
+        </section>
 
-        <div className="mt-8 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
-          <h2 className="text-lg font-semibold">Inbox & Chat kommen in der nächsten Iteration</h2>
-          <p className="mt-2 text-sm text-zinc-500">
-            Auth funktioniert. Als nächstes bauen wir Echtzeit-Chat, Coin-Käufe und Media-Upload.
+        {/* Roadmap */}
+        <section className="animate-fade-up rounded-2xl border border-dashed border-zinc-300 bg-white/40 p-8 text-center md:p-12">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-brand-500">
+            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h2 className="font-display text-2xl font-bold tracking-tight">
+            Inbox & Chat kommen als nächstes
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-500">
+            Coin-System ist live ✓ — als nächstes bauen wir Echtzeit-Chat, Icebreaker und Media-Upload.
           </p>
-        </div>
+        </section>
       </main>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  unit,
+  sub,
+  delay,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  sub: string;
+  delay: number;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        'animate-fade-up rounded-2xl border p-6',
+        highlight
+          ? 'border-brand-300 bg-gradient-to-br from-brand-50 to-white shadow-pink'
+          : 'border-zinc-200 bg-white',
+      ].join(' ')}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="font-display text-4xl font-bold tracking-tight">{value}</span>
+        {unit && <span className="text-base font-medium text-zinc-500">{unit}</span>}
+      </div>
+      <div className="mt-2 truncate text-sm text-zinc-500">{sub}</div>
     </div>
   );
 }

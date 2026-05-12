@@ -2,8 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'LiveCreator',
-  description: 'Verbinde dich mit deinen Lieblings-Creators',
+  title: 'verliebdich · Chat mit echten Creators',
+  description: 'Triff faszinierende Persönlichkeiten und chatte privat.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
