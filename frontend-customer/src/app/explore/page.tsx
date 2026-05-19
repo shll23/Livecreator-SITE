@@ -1,165 +1,216 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api } from '@/lib/api';
-import { Header } from '@/components/Header';
 
-interface Creator {
-  user_id: string;
-  handle: string;
-  display_name: string;
-  bio: string | null;
-  avatar_url: string | null;
-  cover_url: string | null;
-  message_price_coins: number;
-  is_verified: boolean;
+// ============================================================================
+// DEMO-DATEN
+// ============================================================================
+
+const FRAUEN = [
+  { id: 'lara', name: 'Lara', age: 24, city: 'Berlin', image: '/profiles/frau-1-lara/01-haupt.jpg', online: true, mood: 'Diskret' },
+  { id: 'valentina', name: 'Valentina', age: 25, city: 'München', image: '/profiles/frau-2-valentina/01-haupt.jpg', online: true, mood: 'Direkt' },
+  { id: 'mia', name: 'Mia', age: 23, city: 'Hamburg', image: '/profiles/frau-3-mia/01-haupt.jpg', online: true, mood: 'Cool' },
+  { id: 'sophia', name: 'Sophia', age: 26, city: 'Frankfurt', image: '/profiles/frau-4-sophia/01-haupt.png', online: true, mood: 'Sportlich' },
+  { id: 'elena', name: 'Elena', age: 29, city: 'Düsseldorf', image: '/profiles/frau-5-elena/01-haupt.jpg', online: false, mood: 'Reif' },
+  { id: 'sarah', name: 'Sarah', age: 31, city: 'Köln', image: '/profiles/frau-6-sarah/01-haupt.jpg', online: true, mood: 'Sophisticated' },
+];
+
+// ============================================================================
+// LOGO
+// ============================================================================
+
+function Logo() {
+  return (
+    <span className="inline-flex items-center gap-1.5 sm:gap-2 group">
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-600" fill="currentColor">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      </svg>
+      <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight text-zinc-900">verliebdich</span>
+    </span>
+  );
 }
 
-export default function ExplorePage() {
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [loading, setLoading] = useState(true);
+// ============================================================================
+// REGISTER MODAL — popup bei Profil-Klick
+// ============================================================================
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await api<{ creators: Creator[] }>('/api/creators');
-        setCreators(data.creators);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
+function RegisterModal({ frau, onClose }: { frau: typeof FRAUEN[0]; onClose: () => void }) {
   return (
-    <div className="min-h-screen bg-mesh">
-      <Header />
-
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-zinc-200/60">
-        <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
-          <div className="max-w-2xl animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
-              Echte Creators · Direkte Chats
-            </span>
-            <h1 className="mt-5 font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
-              Verbinde dich.<br />
-              <span className="bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent">
-                Wie noch nie zuvor.
-              </span>
-            </h1>
-            <p className="mt-5 text-lg leading-relaxed text-zinc-600">
-              Entdecke außergewöhnliche Persönlichkeiten und führe private, persönliche Gespräche — auf deinen Bedingungen.
-            </p>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-4 animate-fade-up">
+      <div className="max-w-md w-full bg-white rounded-2xl overflow-hidden shadow-2xl">
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img src={frau.image} alt={frau.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors"
+            aria-label="Schließen"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="absolute bottom-4 left-5 text-white">
+            <div className="text-xs uppercase tracking-widest opacity-80">{frau.city} · {frau.age}</div>
+            <div className="font-display text-2xl sm:text-3xl font-semibold">{frau.name}</div>
           </div>
         </div>
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-brand-300/30 blur-3xl"></div>
-        <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl"></div>
-      </section>
 
-      {/* Creator Grid */}
-      <main className="mx-auto max-w-6xl p-4 md:p-8">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
-            Entdecke Creators
-          </h2>
-          {!loading && creators.length > 0 && (
-            <span className="text-sm text-zinc-500">{creators.length} {creators.length === 1 ? 'Creator' : 'Creators'}</span>
-          )}
+        <div className="p-6 sm:p-8 text-center">
+          <h3 className="font-display text-lg sm:text-2xl font-semibold mb-2 leading-tight">
+            Registriere dich kostenlos, um <span className="italic text-brand-600">{frau.name}'s</span> Profil zu sehen.
+          </h3>
+          <p className="text-zinc-600 mb-5 text-sm leading-relaxed">
+            Ohne Abo. Ohne versteckte Kosten. In 30 Sekunden startklar.
+          </p>
+          <Link
+            href="/register"
+            className="block w-full bg-brand-600 text-white text-sm sm:text-base font-semibold py-3 sm:py-4 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg mb-2"
+          >
+            Kostenlos registrieren
+          </Link>
+          <button
+            onClick={onClose}
+            className="text-zinc-500 text-xs sm:text-sm hover:text-zinc-900 transition-colors"
+          >
+            Vielleicht später
+          </button>
         </div>
-
-        {loading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-                <div className="h-28 bg-zinc-100 shimmer"></div>
-                <div className="px-5 pb-5 pt-3 space-y-3">
-                  <div className="h-16 w-16 -mt-12 rounded-full bg-zinc-200 shimmer"></div>
-                  <div className="h-4 w-32 rounded bg-zinc-200 shimmer"></div>
-                  <div className="h-3 w-20 rounded bg-zinc-100 shimmer"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : creators.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-zinc-200 bg-white/50 p-12 text-center">
-            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-brand-500">
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <p className="font-display text-lg font-semibold">Noch keine Creators</p>
-            <p className="mt-1 text-sm text-zinc-500">
-              Registriere einen Creator unter{' '}
-              <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-mono">localhost:3001</code>
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {creators.map((c, i) => (
-              <CreatorCard key={c.user_id} creator={c} delay={i * 60} />
-            ))}
-          </div>
-        )}
-      </main>
+      </div>
     </div>
   );
 }
 
-function CreatorCard({ creator, delay }: { creator: Creator; delay: number }) {
-  const initials = creator.display_name
-    .split(' ')
-    .map((s) => s[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+// ============================================================================
+// EXPLORE PAGE
+// ============================================================================
+
+export default function ExplorePage() {
+  const [selectedFrau, setSelectedFrau] = useState<typeof FRAUEN[0] | null>(null);
+  const [filterCity, setFilterCity] = useState<string>('Alle');
+
+  const cities = ['Alle', ...Array.from(new Set(FRAUEN.map((f) => f.city)))];
+  const filtered = filterCity === 'Alle' ? FRAUEN : FRAUEN.filter((f) => f.city === filterCity);
+  const onlineCount = FRAUEN.filter((f) => f.online).length;
 
   return (
-    <Link
-      href={`/c/${creator.handle}`}
-      className="group block animate-fade-up overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-all hover:-translate-y-1 hover:border-brand-300 hover:shadow-pink"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div
-        className="relative h-28 bg-brand-gradient"
-        style={creator.cover_url ? { backgroundImage: `url(${creator.cover_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-      >
-        {creator.is_verified && (
-          <div className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-white shadow-sm">
-            <svg className="h-3.5 w-3.5 text-brand-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
+    <>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center">
+            <Logo />
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/login" className="hidden sm:inline-block text-sm font-medium text-zinc-700 hover:text-brand-600 transition-colors">Anmelden</Link>
+            <Link href="/register" className="text-xs sm:text-sm font-semibold bg-brand-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Jetzt starten</Link>
           </div>
-        )}
-      </div>
-
-      <div className="px-5 pb-5">
-        <div className="-mt-9 mb-3 grid h-16 w-16 place-items-center rounded-full border-[3px] border-white bg-gradient-to-br from-brand-100 to-brand-200 text-base font-bold text-brand-700 shadow-md">
-          {creator.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={creator.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
-          ) : (
-            initials
-          )}
         </div>
+      </header>
 
-        <div className="font-display text-lg font-semibold leading-tight">{creator.display_name}</div>
-        <div className="mt-0.5 text-sm text-zinc-500">@{creator.handle}</div>
+      <main className="bg-soft-gradient min-h-screen">
+        {/* Header-Sektion */}
+        <section className="pt-8 sm:pt-12 pb-6 sm:pb-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span className="text-green-700 font-semibold text-[10px] sm:text-xs tracking-[0.2em] uppercase">
+                {onlineCount} Frauen jetzt online
+              </span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight mb-3 sm:mb-5">
+              Alle Profile <span className="italic text-brand-600">entdecken</span>
+            </h1>
+            <p className="text-zinc-600 text-sm sm:text-lg max-w-2xl mb-5 sm:mb-8 leading-relaxed">
+              Schau dich um — registriere dich, sobald du jemand findest, mit dem du schreiben willst.
+            </p>
 
-        {creator.bio && (
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-zinc-600">{creator.bio}</p>
-        )}
-
-        <div className="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4">
-          <div className="text-xs text-zinc-500">
-            <span className="font-semibold text-zinc-900">{creator.message_price_coins}</span> Coins/Nachricht
+            {/* Stadt-Filter */}
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {cities.map((city) => (
+                <button
+                  key={city}
+                  onClick={() => setFilterCity(city)}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                    filterCity === city
+                      ? 'bg-brand-600 text-white shadow-pink'
+                      : 'bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200/80'
+                  }`}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
           </div>
-          <span className="rounded-full bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white transition group-hover:bg-brand-500">
-            Chat starten →
-          </span>
-        </div>
-      </div>
-    </Link>
+        </section>
+
+        {/* Profil-Grid */}
+        <section className="pb-12 sm:pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {filtered.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFrau(f)}
+                  className="group relative text-left"
+                >
+                  <div className="relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow group-hover:shadow-pink-lg transition-all">
+                    <img src={f.image} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+
+                    <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
+                      {f.online ? (
+                        <span className="flex items-center gap-1 bg-white/95 backdrop-blur text-zinc-900 text-[9px] sm:text-[11px] font-semibold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">
+                          <span className="relative flex h-1 w-1 sm:h-1.5 sm:w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1 w-1 sm:h-1.5 sm:w-1.5 bg-green-500"></span>
+                          </span>
+                          Online
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 bg-zinc-100/90 backdrop-blur text-zinc-500 text-[9px] sm:text-[11px] font-medium px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
+                          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-400" />
+                          Offline
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 text-white">
+                      <div className="font-display text-base sm:text-2xl font-semibold leading-tight">{f.name} · {f.age}</div>
+                      <div className="text-[9px] sm:text-xs opacity-75 flex items-center gap-0.5 sm:gap-1.5">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="sm:w-2.5 sm:h-2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                        {f.city}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* CTA am Ende */}
+            <div className="mt-10 sm:mt-16 text-center">
+              <p className="text-zinc-600 text-sm sm:text-base mb-4 sm:mb-6">
+                Mehr Profile, Filter & Suche — nach kostenloser Registrierung.
+              </p>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 bg-brand-600 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg text-sm sm:text-base"
+              >
+                <span>Jetzt kostenlos registrieren</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Modal bei Klick auf Profil */}
+      {selectedFrau && <RegisterModal frau={selectedFrau} onClose={() => setSelectedFrau(null)} />}
+    </>
   );
 }

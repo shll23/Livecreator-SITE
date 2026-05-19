@@ -4,37 +4,99 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 // ============================================================================
-// DEMO-DATEN
+// DEMO-DATEN — 6 echte Frauen
 // ============================================================================
 
-const CREATORS = [
-  { name: 'Lina', age: 24, city: 'Berlin', image: '/creators/creator-5.jpg', online: true, mood: 'Aufgeschlossen' },
-  { name: 'Sophia', age: 26, city: 'München', image: '/creators/creator-6.jpg', online: true, mood: 'Neugierig' },
-  { name: 'Mia', age: 23, city: 'Hamburg', image: '/creators/creator-real-4.jpg', online: true, mood: 'Entspannt' },
-  { name: 'Emma', age: 25, city: 'Köln', image: '/creators/creator-7.jpg', online: false, mood: 'Bald zurück' },
-  { name: 'Hannah', age: 22, city: 'Frankfurt', image: '/creators/creator-8.jpg', online: true, mood: 'Süß & frech' },
-  { name: 'Valentina', age: 27, city: 'Düsseldorf', image: '/creators/creator-3.jpg', online: true, mood: 'Klartext' },
-  { name: 'Nora', age: 24, city: 'Stuttgart', image: '/creators/creator-real-5.jpg', online: false, mood: 'Offline' },
-  { name: 'Marie', age: 26, city: 'Leipzig', image: '/creators/creator-2.jpg', online: true, mood: 'Verspielt' },
+const FRAUEN = [
+  {
+    id: 'lara',
+    name: 'Lara',
+    age: 24,
+    city: 'Berlin',
+    image: '/profiles/frau-1-lara/01-haupt.jpg',
+    online: true,
+    mood: 'Diskret',
+    bio: 'Bin eher zurückhaltend am Anfang. Wenn ich mich wohl fühle, taue ich auf.',
+    today: 'Bin heute Abend da.',
+    likes: ['Lange Nachrichten', 'Klartext', 'Späte Abende', 'Wein', 'Ehrliche Komplimente'],
+    looking: ['Lockeres Dating', 'Lange Gespräche', 'Sexting', 'Flirten ohne Druck'],
+  },
+  {
+    id: 'valentina',
+    name: 'Valentina',
+    age: 25,
+    city: 'München',
+    image: '/profiles/frau-2-valentina/01-haupt.jpg',
+    online: true,
+    mood: 'Direkt',
+    bio: 'Ich rede Klartext. Hab keine Lust auf Spielchen oder Standard-Sprüche. Wenn du echt bist, bin ich\'s auch.',
+    today: 'Bock auf was zwischendurch.',
+    likes: ['Klartext', 'Schlagfertige Männer', 'Tanzen', 'Frecher Humor', 'Spontaneität'],
+    looking: ['Kennenlernen', 'Lockeres Dating', 'Offen für ONS', 'Flirten ohne Druck'],
+  },
+  {
+    id: 'mia',
+    name: 'Mia',
+    age: 23,
+    city: 'Hamburg',
+    image: '/profiles/frau-3-mia/01-haupt.jpg',
+    online: true,
+    mood: 'Cool',
+    bio: 'Schreib mich einfach an :)',
+    today: 'online',
+    likes: ['Musik', 'Späte Nächte', 'Klartext', 'Spontaneität'],
+    looking: ['Kennenlernen', 'Sexting', 'Lange Gespräche', 'Flirten ohne Druck'],
+  },
+  {
+    id: 'sophia',
+    name: 'Sophia',
+    age: 26,
+    city: 'Frankfurt',
+    image: '/profiles/frau-4-sophia/01-haupt.png',
+    online: true,
+    mood: 'Sportlich',
+    bio: 'Sport, Musik, Wein. Mehr brauch ich nicht. Suche jemanden zum Quatschen oder mehr — kommt drauf an.',
+    today: 'hab Bock.',
+    likes: ['Sport', 'Tanzen', 'Klartext', 'Frecher Humor', 'Schlagfertige Männer'],
+    looking: ['Lockeres Dating', 'Offen für ONS', 'Sexting', 'Flirten ohne Druck'],
+  },
+  {
+    id: 'elena',
+    name: 'Elena',
+    age: 29,
+    city: 'Düsseldorf',
+    image: '/profiles/frau-5-elena/01-haupt.jpg',
+    online: false,
+    mood: 'Reif',
+    bio: 'Ich bin 29 und weiß was ich will. Keine Lust auf Jungs, die noch nicht wissen wer sie sind.',
+    today: 'Glas Wein, gemütlicher Abend.',
+    likes: ['Lange Gespräche', 'Klartext', 'Wein-Abende', 'Ehrliche Komplimente', 'Echte Männer'],
+    looking: ['Kennenlernen', 'Lockeres Dating', 'Sexting', 'Lange Gespräche'],
+  },
+  {
+    id: 'sarah',
+    name: 'Sarah',
+    age: 31,
+    city: 'Köln',
+    image: '/profiles/frau-6-sarah/01-haupt.jpg',
+    online: true,
+    mood: 'Sophisticated',
+    bio: 'Ich rede gern. Aber manchmal höre ich auch einfach nur zu. Spannend wird\'s für mich, wenn ein Gespräch nicht oberflächlich bleibt.',
+    today: 'Hab Lust auf was Echtes.',
+    likes: ['Lange Gespräche', 'Bücher', 'Wein', 'Klartext', 'Späte Chats'],
+    looking: ['Kennenlernen', 'Lange Gespräche', 'Flirten ohne Druck', 'Sexting'],
+  },
 ];
 
+// Featured-Profile = Valentina
+const FEATURED = FRAUEN.find((f) => f.id === 'valentina')!;
+
+// Premium-Locks — bleibt wie es ist (alte KI-Bilder, ist Platzhalter)
 const PREMIUM_LOCKS = [
-  { name: 'Lina', image: '/creators/creator-real-1-blurred.jpg', coins: 5, label: 'Exklusiv für dich' },
-  { name: 'Mia', image: '/creators/creator-real-2-blurred.jpg', coins: 10, label: 'Privater Moment' },
-  { name: 'Sophia', image: '/creators/creator-real-3-blurred.jpg', coins: 8, label: 'Persönliche Einblicke' },
+  { name: 'Lara', image: '/creators/creator-real-1-blurred.jpg', coins: 5, label: 'Exklusiv für dich' },
+  { name: 'Sophia', image: '/creators/creator-real-2-blurred.jpg', coins: 10, label: 'Privater Moment' },
+  { name: 'Elena', image: '/creators/creator-real-3-blurred.jpg', coins: 8, label: 'Persönliche Einblicke' },
 ];
-
-const FEATURED_PROFILE = {
-  name: 'Lina',
-  age: 24,
-  city: 'Berlin',
-  image: '/creators/creator-5.jpg',
-  online: true,
-  bio: 'Ich rede gern. Ich höre lieber zu. Und ich habe gelernt, dass die spannendsten Gespräche meistens nachts passieren. Mit jemandem, der den Mut hat, mich wirklich kennenzulernen.',
-  likes: ['Lange Nächte', 'Klartext', 'Spontaneität', 'Schlagfertige Männer', 'Kribbeln im Bauch', 'Ehrliche Komplimente'],
-  looking: ['Kennenlernen', 'Lockeres Dating', 'Offen für ONS', 'Sexting', 'Lange Gespräche', 'Flirten ohne Druck'],
-  today: 'Hab Lust auf neue Begegnungen heute.',
-};
 
 // TODO: Vor Live-Launch durch echte Reviews ersetzen sobald Beta-Tester da sind
 const TESTIMONIALS = [
@@ -46,13 +108,13 @@ const TESTIMONIALS = [
 ];
 
 // ============================================================================
-// AGE GATE
+// AGE GATE — unscharfer Hintergrund statt schwarz
 // ============================================================================
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/95 backdrop-blur-xl p-4">
-      <div className="max-w-sm w-full bg-white rounded-2xl p-6 sm:p-8 shadow-2xl text-center animate-fade-up">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/40 backdrop-blur-2xl p-4">
+      <div className="max-w-sm w-full bg-white rounded-2xl p-6 sm:p-8 shadow-2xl text-center animate-fade-up border border-zinc-200/60">
         <div className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-600 text-white font-display font-extrabold text-base mb-4 shadow-pink-lg">
           <span className="relative" style={{ top: '1px' }}>18+</span>
           <div className="absolute inset-0 rounded-full bg-brand-500 blur-2xl opacity-40 -z-10" />
@@ -140,7 +202,7 @@ function Header() {
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Live
           </a>
-          <a href="#top" className="hover:text-brand-600 transition-colors">Begegnungen</a>
+          <Link href="/explore" className="hover:text-brand-600 transition-colors">Profile</Link>
           <a href="#erfahrungen" className="hover:text-brand-600 transition-colors">Erfahrungen</a>
         </nav>
         <div className="flex items-center gap-2 sm:gap-4">
@@ -153,7 +215,7 @@ function Header() {
 }
 
 // ============================================================================
-// HERO — Kompakter, neue Texte
+// HERO
 // ============================================================================
 
 function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
@@ -177,7 +239,6 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
       <div className="absolute bottom-[10%] right-[-15%] w-[340px] sm:w-[640px] h-[300px] sm:h-[540px] bg-brand-400/20 rounded-[60%] blur-3xl pointer-events-none -rotate-6" />
 
       <div className="relative max-w-3xl mx-auto px-5 sm:px-6 text-center sm:text-left">
-        {/* Online-Badge */}
         <div className="inline-flex items-center gap-2 mb-4 sm:mb-6 bg-white/70 backdrop-blur rounded-full pl-2.5 sm:pl-3 pr-4 sm:pr-5 py-1 sm:py-2 border border-brand-200/60">
           <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -188,7 +249,6 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
           </span>
         </div>
 
-        {/* HEADLINE */}
         <h1 className="font-display font-semibold leading-[1.05] tracking-tight text-zinc-900 mb-3 sm:mb-5">
           <span className="block text-[2rem] sm:text-5xl md:text-6xl">
             Sie ist <span className="italic text-brand-600/90 font-medium">online</span>.
@@ -202,7 +262,6 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
           Starte diskret in wenigen Sekunden und entdecke geprüfte Profile in deiner Nähe.
         </p>
 
-        {/* Stadt-Input */}
         <div className="max-w-md mx-auto sm:mx-0">
           <label className="block text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-2.5">
             Singles in deiner Nähe?
@@ -241,11 +300,11 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
 }
 
 // ============================================================================
-// LIVE STRIP — Neue Texte, 2-Spalten-Grid Mobile (nicht angeschnitten!)
+// LIVE STRIP — echte Frauen, Mobile 2-Spalten-Grid
 // ============================================================================
 
 function LiveStrip() {
-  const onlineCreators = CREATORS.filter((c) => c.online);
+  const onlineFrauen = FRAUEN.filter((f) => f.online);
 
   return (
     <section id="live" className="py-8 sm:py-16 bg-white border-y border-zinc-200/60">
@@ -268,12 +327,12 @@ function LiveStrip() {
           </Link>
         </div>
 
-        {/* MOBILE: 2-Spalten-Grid (nicht angeschnitten!) */}
+        {/* MOBILE: 2-Spalten-Grid */}
         <div className="grid grid-cols-2 gap-2.5 sm:hidden">
-          {onlineCreators.slice(0, 4).map((c) => (
-            <Link key={c.name} href="/register" className="group relative">
+          {onlineFrauen.slice(0, 4).map((f) => (
+            <Link key={f.id} href="/register" className="group relative">
               <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow group-hover:shadow-pink-lg transition-all">
-                <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
+                <img src={f.image} alt={f.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
                 <div className="absolute top-2 left-2">
@@ -287,10 +346,10 @@ function LiveStrip() {
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
-                  <div className="font-display text-base font-semibold leading-tight">{c.name} · {c.age}</div>
+                  <div className="font-display text-base font-semibold leading-tight">{f.name} · {f.age}</div>
                   <div className="text-[9px] opacity-75 flex items-center gap-0.5">
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                    {c.city}
+                    {f.city}
                   </div>
                 </div>
               </div>
@@ -300,7 +359,7 @@ function LiveStrip() {
 
         <div className="sm:hidden mt-3 text-center">
           <Link href="/explore" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600">
-            <span>+ {onlineCreators.length - 4} weitere Profile</span>
+            <span>Alle {FRAUEN.length} Profile entdecken</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -315,14 +374,14 @@ function LiveStrip() {
           <style jsx>{`
             div::-webkit-scrollbar { display: none; }
           `}</style>
-          {CREATORS.map((c) => (
-            <Link key={c.name} href="/register" className="group flex-shrink-0 w-[300px] snap-start relative">
+          {FRAUEN.map((f) => (
+            <Link key={f.id} href="/register" className="group flex-shrink-0 w-[300px] snap-start relative">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow group-hover:shadow-pink-lg transition-all">
-                <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={f.image} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
                 <div className="absolute top-3 left-3">
-                  {c.online ? (
+                  {f.online ? (
                     <span className="flex items-center gap-1 bg-white/95 backdrop-blur text-zinc-900 text-[11px] font-semibold px-2.5 py-1 rounded-full shadow">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -339,13 +398,13 @@ function LiveStrip() {
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                  <div className="font-display text-2xl font-semibold mb-0">{c.name} · {c.age}</div>
+                  <div className="font-display text-2xl font-semibold mb-0">{f.name} · {f.age}</div>
                   <div className="text-xs opacity-75 mb-3 flex items-center gap-1.5">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                    {c.city}
+                    {f.city}
                   </div>
                   <div className="inline-flex items-center gap-1 text-[10px] font-medium tracking-wider uppercase bg-white/15 backdrop-blur px-2 py-0.5 rounded-full">
-                    {c.mood}
+                    {f.mood}
                   </div>
                 </div>
               </div>
@@ -358,7 +417,7 @@ function LiveStrip() {
 }
 
 // ============================================================================
-// PREMIUM LOCKS — neue elegantere Texte
+// PREMIUM LOCKS
 // ============================================================================
 
 function PremiumLocks() {
@@ -413,7 +472,7 @@ function PremiumLocks() {
 }
 
 // ============================================================================
-// PROFILE SHOWCASE — Bild LINKS, Daten RECHTS — auch auf Mobile!
+// PROFILE SHOWCASE — Valentina featured, Bild LINKS, Daten RECHTS
 // ============================================================================
 
 function ProfileShowcase() {
@@ -427,12 +486,11 @@ function ProfileShowcase() {
           </h2>
         </div>
 
-        {/* LAYOUT: Bild LINKS, Daten RECHTS — auch auf Mobile (grid-cols-12 IMMER aktiv) */}
         <div className="grid grid-cols-12 gap-3 sm:gap-10 items-start max-w-6xl mx-auto">
-          {/* Bild — LINKS (5 von 12 cols, auch auf Mobile) */}
+          {/* Bild LINKS */}
           <div className="col-span-5">
             <div className="relative aspect-[4/5] rounded-lg sm:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl">
-              <img src={FEATURED_PROFILE.image} alt={FEATURED_PROFILE.name} className="w-full h-full object-cover" />
+              <img src={FEATURED.image} alt={FEATURED.name} className="w-full h-full object-cover" />
               <div className="absolute top-1.5 left-1.5 sm:top-4 sm:left-4 flex items-center gap-1 sm:gap-2 bg-white/95 backdrop-blur px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-full shadow-lg">
                 <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -443,25 +501,25 @@ function ProfileShowcase() {
             </div>
           </div>
 
-          {/* Profil-Details — RECHTS (7 von 12 cols, auch auf Mobile) */}
+          {/* Profil-Details RECHTS */}
           <div className="col-span-7">
             <div className="mb-3 sm:mb-6">
-              <div className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight">{FEATURED_PROFILE.name} · {FEATURED_PROFILE.age}</div>
+              <div className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight">{FEATURED.name} · {FEATURED.age}</div>
               <div className="text-[10px] sm:text-base text-zinc-500 flex items-center gap-0.5 mt-0.5">
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="sm:w-3.5 sm:h-3.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                {FEATURED_PROFILE.city}
+                {FEATURED.city}
               </div>
             </div>
 
             <div className="mb-3 sm:mb-6">
               <div className="text-[8px] sm:text-xs font-medium tracking-[0.15em] sm:tracking-[0.2em] uppercase text-brand-600 mb-1 sm:mb-2.5">Über mich</div>
-              <p className="text-[10px] sm:text-base text-zinc-700 leading-relaxed italic">"{FEATURED_PROFILE.bio}"</p>
+              <p className="text-[10px] sm:text-base text-zinc-700 leading-relaxed italic">"{FEATURED.bio}"</p>
             </div>
 
             <div className="mb-3 sm:mb-6">
               <div className="text-[8px] sm:text-xs font-medium tracking-[0.15em] sm:tracking-[0.2em] uppercase text-brand-600 mb-1 sm:mb-2.5">Worauf ich stehe</div>
               <div className="flex flex-wrap gap-1 sm:gap-2">
-                {FEATURED_PROFILE.likes.map((like) => (
+                {FEATURED.likes.map((like) => (
                   <span key={like} className="px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-full bg-zinc-100 text-zinc-800 text-[9px] sm:text-sm font-medium">
                     {like}
                   </span>
@@ -472,7 +530,7 @@ function ProfileShowcase() {
             <div className="mb-3 sm:mb-6">
               <div className="text-[8px] sm:text-xs font-medium tracking-[0.15em] sm:tracking-[0.2em] uppercase text-brand-600 mb-1 sm:mb-2.5">Was ich suche</div>
               <div className="flex flex-wrap gap-1 sm:gap-2">
-                {FEATURED_PROFILE.looking.map((item) => (
+                {FEATURED.looking.map((item) => (
                   <span key={item} className="px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-full bg-brand-50 border border-brand-200/60 text-brand-700 text-[9px] sm:text-sm font-medium">
                     {item}
                   </span>
@@ -482,7 +540,7 @@ function ProfileShowcase() {
 
             <div className="mb-4 sm:mb-7 p-2 sm:p-4 rounded-md sm:rounded-2xl bg-gradient-to-br from-brand-50/60 to-transparent border border-brand-100/60">
               <div className="text-[8px] sm:text-xs font-medium tracking-[0.15em] sm:tracking-[0.2em] uppercase text-brand-600 mb-0.5 sm:mb-1.5">Heute</div>
-              <p className="text-[10px] sm:text-base text-zinc-800 italic">"{FEATURED_PROFILE.today}"</p>
+              <p className="text-[10px] sm:text-base text-zinc-800 italic">"{FEATURED.today}"</p>
             </div>
 
             <Link href="/explore" className="group inline-flex items-center gap-1 sm:gap-2 text-[11px] sm:text-base text-zinc-900 font-semibold hover:text-brand-600 transition-colors">
@@ -499,7 +557,7 @@ function ProfileShowcase() {
 }
 
 // ============================================================================
-// TESTIMONIALS — "Erfahrungen" statt "Stimmen"
+// TESTIMONIALS — Erfahrungen
 // ============================================================================
 
 function Testimonials() {
@@ -709,7 +767,7 @@ function Footer() {
 }
 
 // ============================================================================
-// STICKY CTA — versteckt sich auch in Profile-Showcase
+// STICKY CTA — Mitscrollend, versteckt in Profile-Showcase, Final-CTA, Footer
 // ============================================================================
 
 function StickyCTA() {
@@ -746,6 +804,7 @@ function StickyCTA() {
 
   return (
     <>
+      {/* Desktop */}
       <div
         className={`hidden sm:block fixed bottom-5 right-5 z-40 transition-all duration-500 ${
           shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
@@ -756,9 +815,9 @@ function StickyCTA() {
           className="group inline-flex items-center gap-2.5 bg-brand-600 text-white font-semibold px-5 py-3 rounded-full shadow-[0_12px_40px_-8px_rgba(236,72,153,0.5)] hover:bg-brand-700 transition-all hover:scale-105"
         >
           <div className="flex -space-x-2">
-            <img src="/creators/creator-5.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-            <img src="/creators/creator-6.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-            <img src="/creators/creator-8.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+            <img src="/profiles/frau-2-valentina/01-haupt.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+            <img src="/profiles/frau-6-sarah/01-haupt.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+            <img src="/profiles/frau-3-mia/01-haupt.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
           </div>
           <span className="text-sm">Jetzt schreiben</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform">
@@ -767,29 +826,29 @@ function StickyCTA() {
         </Link>
       </div>
 
+      {/* Mobile — schwebt höher (bottom-20 statt 0) */}
       <div
-        className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-500 ${
-          shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+        className={`sm:hidden fixed left-3 right-3 z-40 transition-all duration-500 ${
+          shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
         }`}
+        style={{ bottom: '5rem' }}
       >
-        <div className="bg-gradient-to-t from-white via-white/95 to-transparent pt-6 pb-3 px-4">
-          <Link
-            href="/register"
-            className="group flex items-center justify-between gap-2 bg-brand-600 text-white font-semibold px-4 py-3.5 rounded-full shadow-[0_8px_32px_-8px_rgba(236,72,153,0.5)] hover:bg-brand-700 transition-all"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="flex -space-x-2">
-                <img src="/creators/creator-5.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-                <img src="/creators/creator-6.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-                <img src="/creators/creator-8.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-              </div>
-              <span className="text-sm font-semibold">Jetzt schreiben</span>
+        <Link
+          href="/register"
+          className="group flex items-center justify-between gap-2 bg-brand-600 text-white font-semibold px-4 py-3.5 rounded-full shadow-[0_8px_32px_-4px_rgba(236,72,153,0.6)] hover:bg-brand-700 transition-all"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex -space-x-2">
+              <img src="/profiles/frau-2-valentina/01-haupt.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+              <img src="/profiles/frau-6-sarah/01-haupt.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+              <img src="/profiles/frau-3-mia/01-haupt.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
-              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        </div>
+            <span className="text-sm font-semibold">Jetzt schreiben</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
       </div>
     </>
   );
@@ -835,7 +894,7 @@ function ExitIntent() {
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-4 animate-fade-up">
       <div className="max-w-md w-full bg-white rounded-2xl overflow-hidden shadow-2xl">
         <div className="relative aspect-[4/3] overflow-hidden">
-          <img src="/creators/creator-5.jpg" alt="Lina" className="w-full h-full object-cover" />
+          <img src={FEATURED.image} alt={FEATURED.name} className="w-full h-full object-cover" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
           <button
             onClick={() => setShow(false)}
@@ -847,8 +906,8 @@ function ExitIntent() {
             </svg>
           </button>
           <div className="absolute bottom-3 left-4 right-4 text-white">
-            <div className="text-[9px] sm:text-xs uppercase tracking-widest opacity-80">Berlin · 24</div>
-            <div className="font-display text-xl sm:text-3xl font-semibold">Lina</div>
+            <div className="text-[9px] sm:text-xs uppercase tracking-widest opacity-80">{FEATURED.city} · {FEATURED.age}</div>
+            <div className="font-display text-xl sm:text-3xl font-semibold">{FEATURED.name}</div>
           </div>
         </div>
 
@@ -878,7 +937,7 @@ function ExitIntent() {
 }
 
 // ============================================================================
-// CITY MATCH RESULT
+// CITY MATCH
 // ============================================================================
 
 function CityMatchResult({ city }: { city: string }) {
