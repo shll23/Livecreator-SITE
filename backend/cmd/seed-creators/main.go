@@ -90,10 +90,23 @@ var creators = []Creator{
 }
 
 func main() {
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		log.Fatal("DATABASE_URL environment variable nicht gesetzt")
+	// DB-Connection-String aus den einzelnen POSTGRES_* Env-Vars bauen
+	// (gleicher Stil wie das API-Backend)
+	host := os.Getenv("POSTGRES_HOST")
+	port := os.Getenv("POSTGRES_PORT")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DB")
+
+	if host == "" || user == "" || password == "" || dbname == "" {
+		log.Fatal("POSTGRES_HOST / POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB müssen gesetzt sein")
 	}
+	if port == "" {
+		port = "5432"
+	}
+
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		user, password, host, port, dbname)
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dbURL)
