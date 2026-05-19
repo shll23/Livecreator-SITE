@@ -60,8 +60,8 @@ func (s *Server) SetupRouter() *fiber.App {
 	// Public Creator-Listing
 	api.Get("/creators", s.listCreators)
 	api.Get("/creators/:handle", s.getCreatorByHandle)
-	
-// Mock-Confirm-Endpoint (public, simuliert PSP-Callback)
+
+	// Mock-Confirm-Endpoint (public, simuliert PSP-Callback)
 	// Wichtig: MUSS vor der walletGroup registriert werden, sonst greift die Auth-Middleware!
 	// Eigener Pfad-Präfix /mock damit die /wallet-Gruppe nicht zuschlägt.
 	api.Get("/mock/confirm/:purchase_id", s.mockConfirmPurchase)
@@ -74,6 +74,15 @@ func (s *Server) SetupRouter() *fiber.App {
 	walletGroup.Get("/history", s.walletHistory)
 	walletGroup.Get("/purchases", s.walletPurchases)
 	walletGroup.Post("/purchase", s.startPurchase)
+
+	// Chat / Conversations (Customer + Creator)
+	convGroup := api.Group("/conversations", s.requireAuth)
+	convGroup.Get("/", s.listConversations)
+	convGroup.Post("/", s.createConversation)
+	convGroup.Get("/:id", s.getConversation)
+	convGroup.Get("/:id/messages", s.listMessages)
+	convGroup.Post("/:id/messages", s.sendMessage)
+	convGroup.Post("/:id/read", s.markConversationRead)
 
 	return app
 }
