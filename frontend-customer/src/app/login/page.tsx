@@ -57,38 +57,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
-      {/* ============================================ */}
-      {/* LINKS — FORM */}
-      {/* ============================================ */}
-      <div className="flex-1 lg:max-w-[58%] flex flex-col">
-        {/* Header */}
-        <header className="px-6 sm:px-10 py-5 sm:py-8 flex items-center justify-between">
-          <Link href="/" aria-label="Zur Startseite">
-            <Logo />
-          </Link>
-          <Link
-            href="/register"
-            className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-brand-600 transition-colors"
-          >
-            Noch kein Konto? <span className="font-semibold text-brand-600">Registrieren</span>
-          </Link>
-        </header>
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Subtle Background — zwei sehr dezente Pink-Glows */}
+      <div className="pointer-events-none absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full bg-brand-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full bg-brand-100/40 blur-3xl" />
 
-        {/* Form-Container — vertikal zentriert */}
-        <div className="flex-1 flex items-center px-6 sm:px-10 lg:px-16 py-8">
-          <div className="w-full max-w-md mx-auto lg:mx-0 animate-fade-up">
-            {/* Headline */}
-            <div className="mb-7 sm:mb-9">
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.05] mb-2 sm:mb-3">
-                Willkommen <span className="italic text-brand-600">zurück.</span>
-              </h1>
-              <p className="text-zinc-600 text-sm sm:text-base leading-relaxed">
-                Sie warten schon auf dich.
-              </p>
-            </div>
+      {/* Header */}
+      <header className="relative px-6 sm:px-10 py-5 sm:py-8 flex items-center justify-between max-w-6xl mx-auto">
+        <Link href="/" aria-label="Zur Startseite">
+          <Logo />
+        </Link>
+        <Link
+          href="/register"
+          className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-brand-600 transition-colors"
+        >
+          Noch kein Konto? <span className="font-semibold text-brand-600">Registrieren</span>
+        </Link>
+      </header>
 
-            {/* Form */}
+      {/* Form-Container — zentriert */}
+      <div className="relative flex items-center justify-center px-6 py-8 min-h-[calc(100vh-100px)]">
+        <div className="w-full max-w-md animate-fade-up">
+          {/* Headline */}
+          <div className="mb-7 sm:mb-9 text-center">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.05] mb-2 sm:mb-3">
+              Willkommen <span className="italic text-brand-600">zurück.</span>
+            </h1>
+            <p className="text-zinc-600 text-sm sm:text-base leading-relaxed">
+              Sie warten schon auf dich.
+            </p>
+          </div>
+
+          {/* Form-Card */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-zinc-200/60 p-6 sm:p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* E-Mail */}
               <div>
@@ -190,49 +191,6 @@ export default function LoginPage() {
                 <span>🇩🇪 DSGVO</span>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================ */}
-      {/* RECHTS — Hero-Bild (nur Desktop) */}
-      {/* ============================================ */}
-      <div className="hidden lg:block relative flex-1 bg-zinc-900 overflow-hidden">
-        <img
-          src="/profiles/frau-6-sarah/01-haupt.jpg"
-          alt="Sarah"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Gradient-Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/95 via-zinc-900/40 to-zinc-900/20" />
-
-        {/* Floating Badge */}
-        <div className="absolute top-8 right-8 flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-          <span className="text-xs font-semibold text-zinc-900">237 Frauen jetzt online</span>
-        </div>
-
-        {/* Quote unten */}
-        <div className="absolute bottom-0 left-0 right-0 p-10 xl:p-14 text-white">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-brand-400 mb-3 opacity-90">
-            <path d="M9.984 4.5l-.531.703C7.078 8.469 6 12.281 6 16.5h3.984c1.094 0 2.016.891 2.016 1.984v3.516a2 2 0 0 1-1.984 2H6c-1.094 0-2.016-.906-2.016-2.016V16.5c0-4.969 1.359-9.516 4.078-13.547l.328-.469L9.984 4.5zm10.5 0l-.516.703C17.578 8.469 16.5 12.281 16.5 16.5h3.984c1.094 0 2.016.891 2.016 1.984v3.516a2 2 0 0 1-1.984 2H16.5c-1.094 0-2.016-.906-2.016-2.016V16.5c0-4.969 1.359-9.516 4.078-13.547l.328-.469L20.484 4.5z" />
-          </svg>
-          <p className="font-display text-2xl xl:text-3xl font-medium leading-tight tracking-tight mb-4 max-w-md">
-            Spannend wird's für mich, wenn ein Gespräch <span className="italic text-brand-300">nicht oberflächlich</span> bleibt.
-          </p>
-          <div className="flex items-center gap-3 mt-5">
-            <img
-              src="/profiles/frau-6-sarah/01-haupt.jpg"
-              alt=""
-              className="w-10 h-10 rounded-full border-2 border-white/30 object-cover"
-            />
-            <div>
-              <div className="font-semibold text-sm">Sarah · 31</div>
-              <div className="text-xs text-zinc-300">Köln</div>
-            </div>
           </div>
         </div>
       </div>

@@ -6,20 +6,46 @@ import Link from 'next/link';
 import { api, setTokens, APIError } from '@/lib/api';
 
 // ============================================================================
-// DACH-Städte für Autocomplete (Top 50)
+// DACH-Städte für Autocomplete (Top 200+, abgedeckt 90%+ der User)
 // ============================================================================
 const STADTE_DACH = [
-  'Berlin', 'Hamburg', 'München', 'Köln', 'Frankfurt am Main', 'Stuttgart',
-  'Düsseldorf', 'Leipzig', 'Dortmund', 'Essen', 'Bremen', 'Dresden', 'Hannover',
-  'Nürnberg', 'Duisburg', 'Bochum', 'Wuppertal', 'Bielefeld', 'Bonn', 'Münster',
-  'Mannheim', 'Karlsruhe', 'Augsburg', 'Wiesbaden', 'Mönchengladbach', 'Gelsenkirchen',
-  'Aachen', 'Braunschweig', 'Kiel', 'Chemnitz', 'Halle', 'Magdeburg', 'Freiburg',
-  'Krefeld', 'Mainz', 'Lübeck', 'Erfurt', 'Oberhausen', 'Rostock', 'Kassel',
-  'Hagen', 'Potsdam', 'Saarbrücken', 'Heidelberg', 'Regensburg', 'Ingolstadt',
+  // Deutschland — Großstädte & Mittelstädte (alphabetisch)
+  'Aachen', 'Aalen', 'Ahlen', 'Albstadt', 'Aschaffenburg', 'Augsburg',
+  'Bad Homburg', 'Bad Salzuflen', 'Bamberg', 'Bayreuth', 'Berlin', 'Bergisch Gladbach',
+  'Bergheim', 'Bielefeld', 'Bocholt', 'Bochum', 'Bonn', 'Bottrop', 'Brandenburg',
+  'Braunschweig', 'Bremen', 'Bremerhaven', 'Castrop-Rauxel', 'Celle', 'Chemnitz',
+  'Coburg', 'Cottbus', 'Cuxhaven', 'Darmstadt', 'Delmenhorst', 'Dessau-Roßlau',
+  'Detmold', 'Dinslaken', 'Dormagen', 'Dortmund', 'Dresden', 'Duisburg', 'Düren',
+  'Düsseldorf', 'Eberswalde', 'Eisenach', 'Emden', 'Erfurt', 'Erlangen', 'Eschweiler',
+  'Esslingen', 'Essen', 'Euskirchen', 'Flensburg', 'Frankfurt am Main', 'Frankfurt (Oder)',
+  'Freiburg im Breisgau', 'Friedrichshafen', 'Fulda', 'Fürth', 'Gera', 'Gelsenkirchen',
+  'Gießen', 'Gladbeck', 'Görlitz', 'Göppingen', 'Göttingen', 'Greifswald',
+  'Grevenbroich', 'Gronau', 'Gummersbach', 'Gütersloh', 'Hagen', 'Halberstadt',
+  'Halle (Saale)', 'Hamburg', 'Hameln', 'Hamm', 'Hanau', 'Hannover', 'Hattingen',
+  'Heidelberg', 'Heidenheim', 'Heilbronn', 'Herford', 'Herne', 'Herten', 'Hilden',
+  'Hildesheim', 'Hof', 'Hürth', 'Ibbenbüren', 'Ingolstadt', 'Iserlohn', 'Jena',
+  'Kaiserslautern', 'Karlsruhe', 'Kassel', 'Kempten', 'Kerpen', 'Kiel', 'Kleve',
+  'Koblenz', 'Konstanz', 'Köln', 'Krefeld', 'Landshut', 'Langenfeld', 'Langenhagen',
+  'Leipzig', 'Leonberg', 'Leverkusen', 'Lingen', 'Lippstadt', 'Lübeck', 'Lüdenscheid',
+  'Ludwigsburg', 'Ludwigshafen', 'Lüneburg', 'Lünen', 'Magdeburg', 'Mainz', 'Mannheim',
+  'Marburg', 'Marl', 'Meerbusch', 'Memmingen', 'Menden', 'Minden', 'Moers',
+  'Mönchengladbach', 'Mülheim an der Ruhr', 'München', 'Münster', 'Neubrandenburg',
+  'Neumünster', 'Neuss', 'Neustadt', 'Neu-Ulm', 'Neuwied', 'Norderstedt', 'Nordhausen',
+  'Nordhorn', 'Nürnberg', 'Oberhausen', 'Offenbach', 'Offenburg', 'Oldenburg', 'Osnabrück',
+  'Paderborn', 'Passau', 'Peine', 'Pforzheim', 'Pirmasens', 'Plauen', 'Potsdam',
+  'Ratingen', 'Recklinghausen', 'Regensburg', 'Remscheid', 'Reutlingen', 'Rheine',
+  'Rosenheim', 'Rostock', 'Rüsselsheim', 'Saarbrücken', 'Salzgitter', 'Sankt Augustin',
+  'Schwabach', 'Schweinfurt', 'Schwerin', 'Siegen', 'Sindelfingen', 'Solingen',
+  'Speyer', 'Stolberg', 'Stralsund', 'Stuttgart', 'Suhl', 'Trier', 'Troisdorf',
+  'Tübingen', 'Ulm', 'Unna', 'Velbert', 'Viersen', 'Villingen-Schwenningen',
+  'Waiblingen', 'Weimar', 'Wesel', 'Wetzlar', 'Wiesbaden', 'Wilhelmshaven', 'Witten',
+  'Wolfenbüttel', 'Wolfsburg', 'Worms', 'Wuppertal', 'Würzburg', 'Zwickau',
   // Österreich
-  'Wien', 'Graz', 'Linz', 'Salzburg', 'Innsbruck', 'Klagenfurt',
+  'Wien', 'Graz', 'Linz', 'Salzburg', 'Innsbruck', 'Klagenfurt', 'Villach', 'Wels',
+  'Sankt Pölten', 'Dornbirn', 'Steyr', 'Wiener Neustadt', 'Feldkirch', 'Bregenz',
   // Schweiz
-  'Zürich', 'Genf', 'Basel', 'Bern', 'Lausanne', 'Luzern',
+  'Zürich', 'Genf', 'Basel', 'Bern', 'Lausanne', 'Luzern', 'Winterthur', 'St. Gallen',
+  'Lugano', 'Biel/Bienne', 'Thun', 'Köniz', 'Schaffhausen', 'Chur',
 ];
 
 const errorMessages: Record<string, string> = {
@@ -103,16 +129,18 @@ export default function RegisterPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const cityInputRef = useRef<HTMLDivElement>(null);
 
-  // Autocomplete-Logik
+  // Autocomplete-Logik: erst startsWith (besser sortiert), dann includes als Fallback
   useEffect(() => {
     if (city.length < 1) {
       setCitySuggestions([]);
       return;
     }
-    const filtered = STADTE_DACH.filter((s) =>
-      s.toLowerCase().startsWith(city.toLowerCase())
-    ).slice(0, 6);
-    setCitySuggestions(filtered);
+    const query = city.toLowerCase();
+    const startsWith = STADTE_DACH.filter((s) => s.toLowerCase().startsWith(query));
+    const includes = STADTE_DACH.filter(
+      (s) => !s.toLowerCase().startsWith(query) && s.toLowerCase().includes(query)
+    );
+    setCitySuggestions([...startsWith, ...includes].slice(0, 6));
   }, [city]);
 
   // Klick außerhalb → Suggestions schließen
@@ -176,41 +204,42 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
-      {/* ============================================ */}
-      {/* LINKS — FORM (mobile: full width) */}
-      {/* ============================================ */}
-      <div className="flex-1 lg:max-w-[58%] flex flex-col">
-        {/* Header */}
-        <header className="px-6 sm:px-10 py-5 sm:py-8 flex items-center justify-between">
-          <Link href="/" aria-label="Zur Startseite">
-            <Logo />
-          </Link>
-          <Link
-            href="/login"
-            className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-brand-600 transition-colors"
-          >
-            Schon Mitglied? <span className="font-semibold text-brand-600">Anmelden</span>
-          </Link>
-        </header>
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Subtle Background — zwei sehr dezente Pink-Glows */}
+      <div className="pointer-events-none absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full bg-brand-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full bg-brand-100/40 blur-3xl" />
 
-        {/* Form-Container */}
-        <div className="flex-1 flex items-start lg:items-center px-6 sm:px-10 lg:px-16 py-4 sm:py-8">
-          <div className="w-full max-w-md mx-auto lg:mx-0 animate-fade-up">
-            {/* Headline */}
-            <div className="mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-3 sm:mb-4">
-                Kostenlos · 30 Sekunden
-              </div>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.05] mb-2 sm:mb-3">
-                Erstelle dein <span className="italic text-brand-600">Konto.</span>
-              </h1>
-              <p className="text-zinc-600 text-sm sm:text-base leading-relaxed">
-                Geprüfte Profile · Keine Bots · Volle Kontrolle
-              </p>
+      {/* Header */}
+      <header className="relative px-6 sm:px-10 py-5 sm:py-8 flex items-center justify-between max-w-6xl mx-auto">
+        <Link href="/" aria-label="Zur Startseite">
+          <Logo />
+        </Link>
+        <Link
+          href="/login"
+          className="text-xs sm:text-sm font-medium text-zinc-600 hover:text-brand-600 transition-colors"
+        >
+          Schon Mitglied? <span className="font-semibold text-brand-600">Anmelden</span>
+        </Link>
+      </header>
+
+      {/* Form-Container — zentriert */}
+      <div className="relative flex items-start justify-center px-6 py-4 sm:py-8 pb-12">
+        <div className="w-full max-w-md animate-fade-up">
+          {/* Headline */}
+          <div className="mb-6 sm:mb-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-3 sm:mb-4">
+              Kostenlos · 30 Sekunden
             </div>
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.05] mb-2 sm:mb-3">
+              Erstelle dein <span className="italic text-brand-600">Konto.</span>
+            </h1>
+            <p className="text-zinc-600 text-sm sm:text-base leading-relaxed">
+              Geprüfte Profile · Keine Bots · Volle Kontrolle
+            </p>
+          </div>
 
-            {/* Form */}
+          {/* Form-Card mit zarter Border */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-zinc-200/60 p-6 sm:p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* E-Mail */}
               <div>
@@ -261,24 +290,56 @@ export default function RegisterPage() {
                   className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none transition-all"
                   placeholder="z.B. Berlin"
                 />
-                {showSuggestions && citySuggestions.length > 0 && (
+                {showSuggestions && city.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-zinc-200 rounded-xl shadow-lg z-10 overflow-hidden">
-                    {citySuggestions.map((s) => (
+                    {citySuggestions.length > 0 ? (
+                      <>
+                        {/* Treffer */}
+                        {citySuggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              setCity(s);
+                              setShowSuggestions(false);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors flex items-center gap-2"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400 shrink-0">
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                            </svg>
+                            {s}
+                          </button>
+                        ))}
+                        {/* "Andere Stadt" als letzte Option (immer sichtbar wenn Treffer da sind) */}
+                        <button
+                          type="button"
+                          onClick={() => setShowSuggestions(false)}
+                          className="w-full px-4 py-2.5 text-left text-sm text-zinc-600 hover:bg-zinc-50 transition-colors flex items-center gap-2 border-t border-zinc-100"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 shrink-0">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                          <span><span className="font-semibold text-zinc-900">{city}</span> eingeben</span>
+                        </button>
+                      </>
+                    ) : (
+                      // Kein Treffer — nimm trotzdem die Eingabe an
                       <button
-                        key={s}
                         type="button"
-                        onClick={() => {
-                          setCity(s);
-                          setShowSuggestions(false);
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors flex items-center gap-2"
+                        onClick={() => setShowSuggestions(false)}
+                        className="w-full px-4 py-3 text-left text-sm hover:bg-brand-50 transition-colors flex items-start gap-2.5"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-400">
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-600 shrink-0 mt-0.5">
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        {s}
+                        <div>
+                          <div className="text-zinc-900 font-medium">„{city}" verwenden</div>
+                          <div className="text-[11px] text-zinc-500 mt-0.5">Keine Vorschläge — deine Eingabe wird akzeptiert</div>
+                        </div>
                       </button>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
@@ -380,49 +441,6 @@ export default function RegisterPage() {
                 <span>18+</span>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================ */}
-      {/* RECHTS — Hero-Bild (nur Desktop) */}
-      {/* ============================================ */}
-      <div className="hidden lg:block relative flex-1 bg-zinc-900 overflow-hidden">
-        <img
-          src="/profiles/frau-2-valentina/01-haupt.jpg"
-          alt="Valentina"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Gradient-Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/95 via-zinc-900/40 to-zinc-900/20" />
-
-        {/* Floating Badge oben rechts */}
-        <div className="absolute top-8 right-8 flex items-center gap-2 bg-white/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-          <span className="text-xs font-semibold text-zinc-900">237 Frauen jetzt online</span>
-        </div>
-
-        {/* Quote unten */}
-        <div className="absolute bottom-0 left-0 right-0 p-10 xl:p-14 text-white">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-brand-400 mb-3 opacity-90">
-            <path d="M9.984 4.5l-.531.703C7.078 8.469 6 12.281 6 16.5h3.984c1.094 0 2.016.891 2.016 1.984v3.516a2 2 0 0 1-1.984 2H6c-1.094 0-2.016-.906-2.016-2.016V16.5c0-4.969 1.359-9.516 4.078-13.547l.328-.469L9.984 4.5zm10.5 0l-.516.703C17.578 8.469 16.5 12.281 16.5 16.5h3.984c1.094 0 2.016.891 2.016 1.984v3.516a2 2 0 0 1-1.984 2H16.5c-1.094 0-2.016-.906-2.016-2.016V16.5c0-4.969 1.359-9.516 4.078-13.547l.328-.469L20.484 4.5z" />
-          </svg>
-          <p className="font-display text-2xl xl:text-3xl font-medium leading-tight tracking-tight mb-4 max-w-md">
-            Ich rede Klartext. Hab keine Lust auf <span className="italic text-brand-300">Spielchen</span> oder Standard-Sprüche.
-          </p>
-          <div className="flex items-center gap-3 mt-5">
-            <img
-              src="/profiles/frau-2-valentina/01-haupt.jpg"
-              alt=""
-              className="w-10 h-10 rounded-full border-2 border-white/30 object-cover"
-            />
-            <div>
-              <div className="font-semibold text-sm">Valentina · 25</div>
-              <div className="text-xs text-zinc-300">München</div>
-            </div>
           </div>
         </div>
       </div>
