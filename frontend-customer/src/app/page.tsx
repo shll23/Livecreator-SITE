@@ -207,7 +207,7 @@ function Header() {
         </nav>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/login" className="hidden sm:inline-block text-sm font-medium text-zinc-700 hover:text-brand-600 transition-colors">Anmelden</Link>
-          <Link href="/register" className="text-[11px] sm:text-sm font-semibold bg-brand-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Jetzt starten</Link>
+          <Link href="/register" className="text-[11px] sm:text-sm font-semibold bg-brand-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Anmelden / Registrieren</Link>
         </div>
       </div>
     </header>
@@ -443,7 +443,7 @@ function PremiumLocks() {
               <img src={lock.image} alt="Privat" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/40" />
 
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-x-0 top-[28%] sm:top-[30%] flex items-center justify-center">
                 <div className="bg-white/10 backdrop-blur-md rounded-full w-9 h-9 sm:w-14 sm:h-14 flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white sm:w-[22px] sm:h-[22px]">
                     <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -503,7 +503,7 @@ function ProfileShowcase() {
               </div>
               {/* Bild 2 — Zweites Foto, füllt die Höhe */}
               <div className="relative aspect-[4/5] rounded-lg sm:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl">
-                <img src="/profiles/frau-2-valentina/03.jpg" alt={FEATURED.name} className="w-full h-full object-cover" />
+                <img src="/profiles/frau-2-valentina/02.jpg" alt={FEATURED.name} className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
