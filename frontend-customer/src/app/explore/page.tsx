@@ -8,7 +8,7 @@ import Link from 'next/link';
 // ============================================================================
 
 const FRAUEN = [
-  { id: 'lara', name: 'Lara', age: 24, city: 'Berlin', image: '/profiles/frau-1-lara/01-haupt.jpg', online: true, mood: 'Diskret' },
+  { id: 'lara', name: 'Lara', age: 24, city: 'Berlin', image: '/profiles/frau-1-lara/02.jpg', online: true, mood: 'Diskret' },
   { id: 'valentina', name: 'Valentina', age: 25, city: 'München', image: '/profiles/frau-2-valentina/01-haupt.jpg', online: true, mood: 'Direkt' },
   { id: 'mia', name: 'Mia', age: 23, city: 'Hamburg', image: '/profiles/frau-3-mia/01-haupt.jpg', online: true, mood: 'Cool' },
   { id: 'sophia', name: 'Sophia', age: 26, city: 'Frankfurt', image: '/profiles/frau-4-sophia/01-haupt.png', online: true, mood: 'Sportlich' },
@@ -103,15 +103,15 @@ export default function ExplorePage() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link href="/login" className="hidden sm:inline-block text-sm font-medium text-zinc-700 hover:text-brand-600 transition-colors">Anmelden</Link>
-            <Link href="/register" className="text-xs sm:text-sm font-semibold bg-brand-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Jetzt starten</Link>
+            <Link href="/register" className="text-xs sm:text-sm font-semibold bg-brand-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Anmelden / Registrieren</Link>
           </div>
         </div>
       </header>
 
       <main className="bg-soft-gradient min-h-screen">
         {/* Header-Sektion */}
-        <section className="pt-8 sm:pt-12 pb-6 sm:pb-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <section className="pt-6 sm:pt-12 pb-5 sm:pb-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -121,20 +121,20 @@ export default function ExplorePage() {
                 {onlineCount} Frauen jetzt online
               </span>
             </div>
-            <h1 className="font-display text-2xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight mb-3 sm:mb-5">
+            <h1 className="font-display text-xl sm:text-5xl md:text-6xl font-semibold leading-tight tracking-tight mb-2.5 sm:mb-5">
               Alle Profile <span className="italic text-brand-600">entdecken</span>
             </h1>
-            <p className="text-zinc-600 text-sm sm:text-lg max-w-2xl mb-5 sm:mb-8 leading-relaxed">
-              Schau dich um — registriere dich, sobald du jemand findest, mit dem du schreiben willst.
+            <p className="text-zinc-600 text-sm sm:text-lg max-w-2xl mb-4 sm:mb-8 leading-relaxed">
+              Entdecke echte Frauen in deiner Nähe.
             </p>
 
-            {/* Stadt-Filter */}
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {/* Stadt-Filter — kompakter auf Mobile */}
+            <div className="flex flex-wrap gap-1 sm:gap-2">
               {cities.map((city) => (
                 <button
                   key={city}
                   onClick={() => setFilterCity(city)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                  className={`px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium transition-all ${
                     filterCity === city
                       ? 'bg-brand-600 text-white shadow-pink'
                       : 'bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200/80'
@@ -148,9 +148,9 @@ export default function ExplorePage() {
         </section>
 
         {/* Profil-Grid */}
-        <section className="pb-12 sm:pb-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+        <section className="pb-20 sm:pb-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
               {filtered.map((f) => (
                 <button
                   key={f.id}
@@ -158,7 +158,11 @@ export default function ExplorePage() {
                   className="group relative text-left"
                 >
                   <div className="relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow group-hover:shadow-pink-lg transition-all">
-                    <img src={f.image} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img
+                      src={f.image}
+                      alt={f.name}
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                    />
                     <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
                     <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
