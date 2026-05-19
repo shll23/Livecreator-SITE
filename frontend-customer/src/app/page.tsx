@@ -59,41 +59,39 @@ const FAQ_ITEMS = [
 
 function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/95 backdrop-blur-xl p-6">
-      <div className="max-w-md w-full bg-white rounded-[2rem] p-10 md:p-14 shadow-2xl text-center animate-fade-up">
-        {/* 18+ Badge — größer, fetter, leicht tiefer, mit Glow */}
-        <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-600 text-white font-display font-extrabold text-2xl mb-8 shadow-pink-lg">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/95 backdrop-blur-xl p-4 sm:p-6">
+      <div className="max-w-md w-full bg-white rounded-3xl sm:rounded-[2rem] p-6 sm:p-10 md:p-14 shadow-2xl text-center animate-fade-up">
+        <div className="relative inline-flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-brand-600 text-white font-display font-extrabold text-lg sm:text-2xl mb-5 sm:mb-8 shadow-pink-lg">
           <span className="relative" style={{ top: '1px' }}>18+</span>
           <div className="absolute inset-0 rounded-full bg-brand-500 blur-2xl opacity-40 -z-10" />
         </div>
 
-        {/* Headline — auf zwei getrennten Zeilen, ohne Punkt, leicht nach links versetzt */}
-        <h2 className="font-display font-semibold leading-[1.05] mb-6">
-          <span className="block text-3xl text-zinc-900">Diese Seite ist nur</span>
-          <span className="block text-3xl italic text-brand-600 -translate-x-[2px]">für Erwachsene</span>
+        <h2 className="font-display font-semibold leading-[1.1] mb-4 sm:mb-6">
+          <span className="block text-xl sm:text-3xl text-zinc-900">Diese Seite ist nur</span>
+          <span className="block text-xl sm:text-3xl italic text-brand-600 -translate-x-[1px]">für Erwachsene</span>
         </h2>
 
-        <p className="text-zinc-600 mb-10 leading-relaxed text-sm">
+        <p className="text-zinc-600 mb-6 sm:mb-10 leading-relaxed text-xs sm:text-sm">
           Du musst mindestens 18 Jahre alt sein, um verliebdich zu nutzen.
           Mit dem Bestätigen erklärst du, volljährig zu sein.
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:gap-3">
           <button
             onClick={onConfirm}
-            className="w-full bg-zinc-900 text-white font-semibold py-5 rounded-full hover:bg-brand-600 hover:shadow-[0_0_30px_-5px_rgba(236,72,153,0.5)] transition-all"
+            className="w-full bg-zinc-900 text-white text-sm sm:text-base font-semibold py-3.5 sm:py-5 rounded-full hover:bg-brand-600 hover:shadow-[0_0_30px_-5px_rgba(236,72,153,0.5)] transition-all"
           >
             Ich bin 18 oder älter — eintreten
           </button>
           <a
             href="https://www.google.com"
-            className="w-full text-zinc-500 font-medium py-3 hover:text-zinc-900 transition-colors text-sm"
+            className="w-full text-zinc-500 font-medium py-2 sm:py-3 hover:text-zinc-900 transition-colors text-xs sm:text-sm"
           >
             Ich bin jünger — verlassen
           </a>
         </div>
 
-        <p className="mt-8 text-xs text-zinc-400">
+        <p className="mt-5 sm:mt-8 text-[10px] sm:text-xs text-zinc-400">
           Deine Daten sind sicher · DSGVO-konform · Made in 🇩🇪
         </p>
       </div>
@@ -115,11 +113,11 @@ function Header() {
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-zinc-200/50 py-3' : 'bg-transparent py-5'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-xl group-hover:scale-110 transition-transform">v</div>
-          <span className="font-display text-2xl font-semibold tracking-tight">verliebdich</span>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/90 backdrop-blur-xl border-b border-zinc-200/50 py-2 sm:py-3' : 'bg-transparent py-3 sm:py-5'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-sm sm:text-xl group-hover:scale-110 transition-transform">v</div>
+          <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight">verliebdich</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-700">
           <a href="#live" className="hover:text-brand-600 transition-colors flex items-center gap-2">
@@ -130,9 +128,9 @@ function Header() {
           <a href="#preise" className="hover:text-brand-600 transition-colors">Mitgliedschaft</a>
           <a href="#faq" className="hover:text-brand-600 transition-colors">Fragen</a>
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link href="/login" className="hidden sm:inline-block text-sm font-medium text-zinc-700 hover:text-brand-600 transition-colors">Anmelden</Link>
-          <Link href="/register" className="text-sm font-semibold bg-brand-600 text-white px-5 py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Jetzt starten</Link>
+          <Link href="/register" className="text-xs sm:text-sm font-semibold bg-brand-600 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-zinc-900 transition-all shadow-pink">Jetzt starten</Link>
         </div>
       </div>
     </header>
@@ -161,43 +159,39 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-24 pb-16 bg-soft-gradient">
-      {/* Asymmetrische, organischere Blurs */}
-      <div className="absolute top-[20%] -left-32 w-[480px] h-[520px] bg-brand-300/25 rounded-[50%] blur-3xl pointer-events-none rotate-12" />
-      <div className="absolute bottom-[10%] right-[-15%] w-[640px] h-[540px] bg-brand-400/20 rounded-[60%] blur-3xl pointer-events-none -rotate-6" />
+    <section className="relative min-h-screen flex items-center overflow-hidden pt-16 sm:pt-24 pb-10 sm:pb-16 bg-soft-gradient">
+      <div className="absolute top-[20%] -left-20 sm:-left-32 w-[280px] sm:w-[480px] h-[320px] sm:h-[520px] bg-brand-300/25 rounded-[50%] blur-3xl pointer-events-none rotate-12" />
+      <div className="absolute bottom-[10%] right-[-15%] w-[380px] sm:w-[640px] h-[340px] sm:h-[540px] bg-brand-400/20 rounded-[60%] blur-3xl pointer-events-none -rotate-6" />
 
-      <div className="relative max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-10 items-center w-full">
-        {/* Linke Spalte — kompakter, ruhiger */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-12 gap-8 sm:gap-10 items-center w-full">
         <div className="md:col-span-6 lg:col-span-6 animate-fade-up">
-          <div className="inline-flex items-center gap-3 mb-7 bg-white/70 backdrop-blur rounded-full pl-3 pr-5 py-2 border border-brand-200/60">
-            <span className="relative flex h-2.5 w-2.5">
+          <div className="inline-flex items-center gap-2 sm:gap-3 mb-5 sm:mb-7 bg-white/70 backdrop-blur rounded-full pl-2.5 sm:pl-3 pr-3.5 sm:pr-5 py-1.5 sm:py-2 border border-brand-200/60">
+            <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
             </span>
-            <span className="text-zinc-800 text-sm font-medium">
+            <span className="text-zinc-800 text-xs sm:text-sm font-medium">
               <span className="font-display text-brand-700 font-bold tabular-nums">{onlineCount}</span> Frauen gerade online
             </span>
           </div>
 
-          {/* Headline — 10-15% kleiner, engerer Line-Height, "wartet" weniger dominant */}
-          <h1 className="font-display font-semibold leading-[0.92] tracking-tight text-zinc-900">
-            <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl">Sie</span>
-            <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl italic text-brand-600/90 font-medium">wartet</span>
-            <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl">auf dich.</span>
+          <h1 className="font-display font-semibold leading-[0.95] tracking-tight text-zinc-900">
+            <span className="block text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl">Sie</span>
+            <span className="block text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl italic text-brand-600/90 font-medium">wartet</span>
+            <span className="block text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl">auf dich.</span>
           </h1>
 
-          <p className="mt-7 text-base md:text-lg text-zinc-700 max-w-lg leading-relaxed">
+          <p className="mt-5 sm:mt-7 text-sm sm:text-base md:text-lg text-zinc-700 max-w-lg leading-relaxed">
             Schreib jetzt mit einer der <strong className="text-brand-700">{onlineCount} Frauen</strong>, die gerade online sind. <span className="font-medium">Diskret. Direkt. Echt.</span>
           </p>
 
-          {/* Stadt-Input — keine Datenschutz-Erklärung mehr */}
-          <div className="mt-8">
-            <label className="block text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-3">
+          <div className="mt-6 sm:mt-8">
+            <label className="block text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2 sm:mb-3">
               Wer ist in deiner Nähe?
             </label>
-            <div className="flex flex-col sm:flex-row gap-2 max-w-md bg-white rounded-2xl sm:rounded-full p-2 shadow-[0_4px_24px_-8px_rgba(236,72,153,0.15)] border border-zinc-200/80">
-              <div className="flex items-center gap-2 flex-1 px-4">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-zinc-400 flex-shrink-0">
+            <div className="flex flex-col gap-2 max-w-md bg-white rounded-2xl p-1.5 sm:p-2 shadow-[0_4px_24px_-8px_rgba(236,72,153,0.15)] border border-zinc-200/80">
+              <div className="flex items-center gap-2 flex-1 px-3 sm:px-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-zinc-400 flex-shrink-0">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
                 </svg>
                 <input
@@ -206,50 +200,47 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
                   onChange={(e) => setCity(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCitySubmit()}
                   placeholder="Deine Stadt"
-                  className="flex-1 py-3 bg-transparent text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+                  className="flex-1 py-2.5 sm:py-3 text-sm sm:text-base bg-transparent text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
                 />
               </div>
               <button
                 onClick={handleCitySubmit}
-                className="bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl sm:rounded-full hover:bg-brand-700 transition-all whitespace-nowrap"
+                className="bg-brand-600 text-white text-sm sm:text-base font-semibold px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-brand-700 transition-all whitespace-nowrap"
               >
                 Frauen in deiner Nähe finden
               </button>
             </div>
           </div>
 
-          {/* Trust-Line — gestrafft */}
-          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-zinc-500">
-            <span className="flex items-center gap-1.5"><span className="text-brand-600">·</span> Kein Abo</span>
-            <span className="flex items-center gap-1.5"><span className="text-brand-600">·</span> 100% diskret</span>
-            <span className="flex items-center gap-1.5"><span className="text-brand-600">·</span> 18+ verifiziert</span>
+          <div className="mt-5 sm:mt-8 flex flex-wrap items-center gap-x-4 sm:gap-x-5 gap-y-2 text-xs sm:text-sm text-zinc-500">
+            <span className="flex items-center gap-1"><span className="text-brand-600">·</span> Kein Abo</span>
+            <span className="flex items-center gap-1"><span className="text-brand-600">·</span> 100% diskret</span>
+            <span className="flex items-center gap-1"><span className="text-brand-600">·</span> 18+ verifiziert</span>
           </div>
         </div>
 
-        {/* Rechte Spalte — größer, dominanter */}
-        <div className="md:col-span-6 lg:col-span-6 relative animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <div className="relative aspect-[4/5] w-full max-w-[480px] mx-auto">
-            <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.25)]">
+        <div className="md:col-span-6 lg:col-span-6 relative animate-fade-up mt-4 sm:mt-0" style={{ animationDelay: '200ms' }}>
+          <div className="relative aspect-[4/5] w-full max-w-[320px] sm:max-w-[480px] mx-auto">
+            <div className="absolute inset-0 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.25)]">
               <img src="/creators/creator-5.jpg" alt="Lina" className="w-full h-full object-cover" />
               <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-              <div className="absolute top-6 right-6 flex items-center gap-2 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full shadow-lg">
-                <span className="relative flex h-2 w-2">
+              <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500"></span>
                 </span>
-                <span className="text-xs font-semibold text-zinc-900">Online</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-zinc-900">Online</span>
               </div>
 
-              <div className="absolute bottom-8 left-8 right-8 text-white">
-                <div className="text-xs font-medium tracking-[0.2em] uppercase opacity-80 mb-2">Berlin · 24</div>
-                <div className="font-display text-4xl font-semibold mb-3">Lina</div>
-                <p className="text-sm italic leading-snug opacity-95">"Hab Lust auf neue Begegnungen heute."</p>
+              <div className="absolute bottom-5 sm:bottom-8 left-5 sm:left-8 right-5 sm:right-8 text-white">
+                <div className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase opacity-80 mb-1 sm:mb-2">Berlin · 24</div>
+                <div className="font-display text-2xl sm:text-4xl font-semibold mb-1.5 sm:mb-3">Lina</div>
+                <p className="text-xs sm:text-sm italic leading-snug opacity-95">"Hab Lust auf neue Begegnungen heute."</p>
               </div>
             </div>
 
-            {/* Floating Message — subtiler, tiefer, glassiger */}
-            <div className={`absolute -bottom-8 right-4 md:-right-4 bg-white/85 backdrop-blur-xl rounded-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] px-4 py-3 max-w-[230px] border border-white/60 transition-all duration-700 ${bubbleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`hidden sm:block absolute -bottom-8 right-4 md:-right-4 bg-white/85 backdrop-blur-xl rounded-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] px-4 py-3 max-w-[230px] border border-white/60 transition-all duration-700 ${bubbleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex items-start gap-2.5">
                 <img src="/creators/creator-5.jpg" alt="" className="w-7 h-7 rounded-full object-cover" />
                 <div>
@@ -276,62 +267,58 @@ function LiveStrip() {
   const onlineCreators = CREATORS.filter((c) => c.online);
 
   return (
-    <section id="live" className="py-16 md:py-20 bg-white border-y border-zinc-200/60">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-end justify-between mb-8 gap-4">
+    <section id="live" className="py-12 sm:py-16 md:py-20 bg-white border-y border-zinc-200/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-end justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="relative flex h-2.5 w-2.5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
               </span>
-              <span className="text-green-700 font-semibold text-xs tracking-[0.2em] uppercase">Jetzt Live</span>
+              <span className="text-green-700 font-semibold text-[10px] sm:text-xs tracking-[0.2em] uppercase">Jetzt Live</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-semibold leading-tight">
-              <span className="text-brand-600">{onlineCreators.length}</span> Frauen warten auf
-              <br className="hidden md:block" /> <span className="italic">deine Nachricht</span>
+            <h2 className="font-display text-xl sm:text-3xl md:text-4xl font-semibold leading-tight">
+              <span className="text-brand-600">{onlineCreators.length}</span> Frauen warten auf <span className="italic">deine Nachricht</span>
             </h2>
           </div>
-          <Link href="/explore" className="text-sm text-zinc-500 hover:text-brand-600 transition-colors font-medium whitespace-nowrap mb-2">
-            Alle anzeigen →
+          <Link href="/explore" className="text-xs sm:text-sm text-zinc-500 hover:text-brand-600 transition-colors font-medium whitespace-nowrap mb-1 sm:mb-2">
+            Alle →
           </Link>
         </div>
 
-        {/* Drag-Scroll, Scrollbar versteckt */}
         <div
-          className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory"
+          className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <style jsx>{`
             div::-webkit-scrollbar { display: none; }
           `}</style>
           {CREATORS.map((c) => (
-            <Link key={c.name} href="/register" className="group flex-shrink-0 w-[300px] snap-start relative">
+            <Link key={c.name} href="/register" className="group flex-shrink-0 w-[220px] sm:w-[300px] snap-start relative">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group-hover:shadow-pink-lg transition-all">
                 <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
-                {/* Online/Offline Badge — subtiler */}
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-2.5 sm:top-3 left-2.5 sm:left-3">
                   {c.online ? (
-                    <span className="flex items-center gap-1.5 bg-white/95 backdrop-blur text-zinc-900 text-[11px] font-semibold px-2.5 py-1 rounded-full shadow">
-                      <span className="relative flex h-2 w-2">
+                    <span className="flex items-center gap-1 sm:gap-1.5 bg-white/95 backdrop-blur text-zinc-900 text-[10px] sm:text-[11px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">
+                      <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500"></span>
                       </span>
                       Online
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 bg-zinc-100/90 backdrop-blur text-zinc-500 text-[11px] font-medium px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                    <span className="flex items-center gap-1 sm:gap-1.5 bg-zinc-100/90 backdrop-blur text-zinc-500 text-[10px] sm:text-[11px] font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-400" />
                       Offline
                     </span>
                   )}
                 </div>
 
-                {/* Hover-Preview-Bubble */}
                 {c.online && (
-                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                  <div className="hidden sm:block absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
                     <div className="bg-white rounded-2xl rounded-tr-md shadow-xl px-3 py-2 max-w-[180px]">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
@@ -342,14 +329,14 @@ function LiveStrip() {
                   </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                  <div className="font-display text-2xl font-semibold mb-0.5">{c.name} · {c.age}</div>
-                  <div className="text-xs opacity-75 mb-3 flex items-center gap-1.5">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                <div className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-5 text-white">
+                  <div className="font-display text-lg sm:text-2xl font-semibold mb-0.5">{c.name} · {c.age}</div>
+                  <div className="text-[10px] sm:text-xs opacity-75 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-1.5">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="sm:w-2.5 sm:h-2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
                     {c.city}
                   </div>
-                  <p className="text-sm leading-snug italic opacity-95 mb-3 line-clamp-2">"{c.status}"</p>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-medium tracking-wider uppercase bg-white/15 backdrop-blur px-2 py-1 rounded-full">
+                  <p className="text-xs sm:text-sm leading-snug italic opacity-95 mb-2 sm:mb-3 line-clamp-2">"{c.status}"</p>
+                  <div className="inline-flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-medium tracking-wider uppercase bg-white/15 backdrop-blur px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
                     {c.mood}
                   </div>
                 </div>
@@ -368,48 +355,43 @@ function LiveStrip() {
 
 function PremiumLocks() {
   return (
-    <section className="py-24 md:py-32 bg-zinc-900 text-white relative overflow-hidden">
-      {/* Asymmetrischer Glow */}
-      <div className="absolute top-[15%] left-[20%] w-[420px] h-[480px] bg-brand-600/25 rounded-[55%] blur-3xl pointer-events-none rotate-12" />
-      <div className="absolute bottom-[10%] right-[15%] w-[380px] h-[420px] bg-brand-700/20 rounded-[45%] blur-3xl pointer-events-none -rotate-6" />
+    <section className="py-16 sm:py-24 md:py-32 bg-zinc-900 text-white relative overflow-hidden">
+      <div className="absolute top-[15%] left-[20%] w-[280px] sm:w-[420px] h-[320px] sm:h-[480px] bg-brand-600/25 rounded-[55%] blur-3xl pointer-events-none rotate-12" />
+      <div className="absolute bottom-[10%] right-[15%] w-[260px] sm:w-[380px] h-[280px] sm:h-[420px] bg-brand-700/20 rounded-[45%] blur-3xl pointer-events-none -rotate-6" />
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="text-brand-400 font-medium text-xs tracking-[0.3em] uppercase mb-6">Exklusiv</div>
-          <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
-            Was sie nur dir
-            <br />
-            <span className="italic text-brand-400">privat zeigt</span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+          <div className="text-brand-400 font-medium text-[10px] sm:text-xs tracking-[0.3em] uppercase mb-4 sm:mb-6">Exklusiv</div>
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+            Was sie nur dir <span className="italic text-brand-400">privat zeigt</span>
           </h2>
-          <p className="mt-6 text-zinc-300 leading-relaxed text-lg">
+          <p className="mt-4 sm:mt-6 text-zinc-300 leading-relaxed text-sm sm:text-lg">
             Schalt frei, was dich neugierig macht.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
           {PREMIUM_LOCKS.map((lock, i) => (
             <div key={i} className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
               <img src={lock.image} alt="Locked" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/40" />
 
-              {/* Lock-Kreis — 15% kleiner */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/10 backdrop-blur-md rounded-full w-16 h-16 flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-white">
+                <div className="bg-white/10 backdrop-blur-md rounded-full w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white sm:w-[26px] sm:h-[26px]">
                     <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" />
                   </svg>
                 </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-end justify-between gap-3">
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                <div className="flex items-end justify-between gap-2 sm:gap-3">
                   <div>
-                    <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-400 mb-1">{lock.label}</div>
-                    <div className="font-display text-2xl font-semibold mb-2">Von {lock.name}</div>
+                    <div className="text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase text-brand-400 mb-1">{lock.label}</div>
+                    <div className="font-display text-lg sm:text-2xl font-semibold mb-1 sm:mb-2">Von {lock.name}</div>
                   </div>
-                  {/* Coin-Badge — glassiger, weniger pink */}
-                  <Link href="/register" className="bg-white/10 backdrop-blur-md text-white font-semibold text-xs px-3 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-all whitespace-nowrap">
+                  <Link href="/register" className="bg-white/10 backdrop-blur-md text-white font-semibold text-[10px] sm:text-xs px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full border border-white/20 hover:bg-white/20 transition-all whitespace-nowrap">
                     🔓 {lock.coins} Coins
                   </Link>
                 </div>
@@ -418,7 +400,7 @@ function PremiumLocks() {
           ))}
         </div>
 
-        <p className="text-center mt-12 text-zinc-400 text-sm">
+        <p className="text-center mt-8 sm:mt-12 text-zinc-400 text-xs sm:text-sm">
           Diskret & Ohne Verpflichtung.
         </p>
       </div>
@@ -427,88 +409,78 @@ function PremiumLocks() {
 }
 
 // ============================================================================
-// PROFILE SHOWCASE (NEU — ersetzt Icebreaker)
+// PROFILE SHOWCASE
 // ============================================================================
 
 function ProfileShowcase() {
   return (
-    <section className="py-24 md:py-32 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="text-brand-600 font-medium text-xs tracking-[0.3em] uppercase mb-6">Profile</div>
-          <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
-            Lern sie erst kennen,
-            <br />
-            <span className="italic text-brand-600">dann schreib</span>
+    <section className="py-16 sm:py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+          <div className="text-brand-600 font-medium text-[10px] sm:text-xs tracking-[0.3em] uppercase mb-4 sm:mb-6">Profile</div>
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+            Lern sie erst kennen, <span className="italic text-brand-600">dann schreib</span>
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-12 gap-8 md:gap-12 items-center max-w-6xl mx-auto">
-          {/* Bild */}
+        <div className="grid md:grid-cols-12 gap-6 sm:gap-8 md:gap-12 items-center max-w-6xl mx-auto">
           <div className="md:col-span-5 lg:col-span-5">
-            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative aspect-[4/5] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl max-w-[340px] mx-auto md:max-w-none">
               <img src={FEATURED_PROFILE.image} alt={FEATURED_PROFILE.name} className="w-full h-full object-cover" />
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full shadow-lg">
-                <span className="relative flex h-2 w-2">
+              <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500"></span>
                 </span>
-                <span className="text-xs font-semibold text-zinc-900">Online</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-zinc-900">Online</span>
               </div>
             </div>
           </div>
 
-          {/* Profil-Details */}
           <div className="md:col-span-7 lg:col-span-7">
-            {/* Name & Stadt */}
-            <div className="mb-8">
-              <div className="font-display text-5xl font-semibold mb-2">{FEATURED_PROFILE.name} · {FEATURED_PROFILE.age}</div>
-              <div className="text-zinc-500 flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+            <div className="mb-6 sm:mb-8">
+              <div className="font-display text-3xl sm:text-5xl font-semibold mb-1 sm:mb-2">{FEATURED_PROFILE.name} · {FEATURED_PROFILE.age}</div>
+              <div className="text-sm sm:text-base text-zinc-500 flex items-center gap-1 sm:gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="sm:w-3.5 sm:h-3.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
                 {FEATURED_PROFILE.city}
               </div>
             </div>
 
-            {/* Über mich */}
-            <div className="mb-8">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-3">Über mich</div>
-              <p className="text-lg text-zinc-700 leading-relaxed italic">"{FEATURED_PROFILE.bio}"</p>
+            <div className="mb-6 sm:mb-8">
+              <div className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2 sm:mb-3">Über mich</div>
+              <p className="text-sm sm:text-lg text-zinc-700 leading-relaxed italic">"{FEATURED_PROFILE.bio}"</p>
             </div>
 
-            {/* Worauf ich stehe */}
-            <div className="mb-8">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-3">Worauf ich stehe</div>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-6 sm:mb-8">
+              <div className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2 sm:mb-3">Worauf ich stehe</div>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {FEATURED_PROFILE.likes.map((like) => (
-                  <span key={like} className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-800 text-sm font-medium">
+                  <span key={like} className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-zinc-100 text-zinc-800 text-xs sm:text-sm font-medium">
                     {like}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Was ich suche */}
-            <div className="mb-8">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-3">Was ich suche</div>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-6 sm:mb-8">
+              <div className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2 sm:mb-3">Was ich suche</div>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {FEATURED_PROFILE.looking.map((item) => (
-                  <span key={item} className="px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200/60 text-brand-700 text-sm font-medium">
+                  <span key={item} className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-brand-50 border border-brand-200/60 text-brand-700 text-xs sm:text-sm font-medium">
                     {item}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Heute */}
-            <div className="mb-10 p-5 rounded-2xl bg-gradient-to-br from-brand-50/60 to-transparent border border-brand-100/60">
-              <div className="text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2">Heute</div>
-              <p className="text-zinc-800 italic">"{FEATURED_PROFILE.today}"</p>
+            <div className="mb-8 sm:mb-10 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-50/60 to-transparent border border-brand-100/60">
+              <div className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-2">Heute</div>
+              <p className="text-sm sm:text-base text-zinc-800 italic">"{FEATURED_PROFILE.today}"</p>
             </div>
 
-            {/* CTA */}
-            <Link href="/explore" className="group inline-flex items-center gap-3 text-zinc-900 font-semibold hover:text-brand-600 transition-colors">
+            <Link href="/explore" className="group inline-flex items-center gap-2 sm:gap-3 text-sm sm:text-base text-zinc-900 font-semibold hover:text-brand-600 transition-colors">
               <span>Mehr Profile entdecken</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform sm:w-[18px] sm:h-[18px]">
                 <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </Link>
@@ -525,62 +497,58 @@ function ProfileShowcase() {
 
 function CoinPackages() {
   return (
-    <section id="preise" className="py-24 md:py-32 relative overflow-hidden">
-      {/* Ultra-subtiler warmer Hintergrund */}
+    <section id="preise" className="py-16 sm:py-24 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-white via-brand-50/30 to-white pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-brand-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[260px] sm:w-[400px] h-[260px] sm:h-[400px] bg-brand-200/20 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <div className="text-brand-600 font-medium text-xs tracking-[0.3em] uppercase mb-6">Mitgliedschaft</div>
-          <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
-            Du zahlst nur,
-            <br />
-            <span className="italic text-brand-600">was du gibst</span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-20">
+          <div className="text-brand-600 font-medium text-[10px] sm:text-xs tracking-[0.3em] uppercase mb-4 sm:mb-6">Mitgliedschaft</div>
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+            Du zahlst nur, <span className="italic text-brand-600">was du gibst</span>
           </h2>
-          <p className="mt-6 text-lg text-zinc-600 leading-relaxed">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-zinc-600 leading-relaxed">
             Du behältst jederzeit die volle Kontrolle.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-7 max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-7 max-w-6xl mx-auto">
           {COIN_PACKAGES.map((pkg) => (
             <div
               key={pkg.name}
-              className={`relative rounded-[2rem] p-10 transition-all duration-500 ${
+              className={`relative rounded-2xl sm:rounded-[2rem] p-5 sm:p-10 transition-all duration-500 ${
                 pkg.popular
                   ? 'bg-gradient-to-br from-zinc-900 to-zinc-800 text-white shadow-[0_20px_60px_-15px_rgba(236,72,153,0.25)] md:scale-[1.03]'
                   : 'bg-white border border-zinc-200/80 hover:border-brand-200 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)]'
               }`}
             >
-              {/* Subtiler Pink-Glow auf der Popular Card */}
               {pkg.popular && (
-                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 rounded-2xl sm:rounded-[2rem] bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
               )}
 
               {pkg.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-semibold tracking-[0.2em] uppercase px-3.5 py-1 rounded-full">
+                <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[8px] sm:text-[10px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                   Empfohlen
                 </div>
               )}
 
               <div className="relative">
-                <div className={`text-xs font-medium tracking-[0.3em] uppercase mb-5 ${pkg.popular ? 'text-brand-300' : 'text-brand-600'}`}>
+                <div className={`text-[9px] sm:text-xs font-medium tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-3 sm:mb-5 ${pkg.popular ? 'text-brand-300' : 'text-brand-600'}`}>
                   {pkg.name}
                 </div>
 
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="font-display text-5xl font-semibold">{pkg.price}</span>
-                  <span className={`text-lg ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>€</span>
+                  <span className="font-display text-3xl sm:text-5xl font-semibold">{pkg.price}</span>
+                  <span className={`text-sm sm:text-lg ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>€</span>
                 </div>
 
-                <div className={`font-display text-2xl font-medium mt-6 ${pkg.popular ? 'text-zinc-100' : 'text-zinc-800'}`}>
-                  {pkg.coins} <span className={`text-base font-sans ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>Coins</span>
+                <div className={`font-display text-base sm:text-2xl font-medium mt-3 sm:mt-6 ${pkg.popular ? 'text-zinc-100' : 'text-zinc-800'}`}>
+                  {pkg.coins} <span className={`text-xs sm:text-base font-sans ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>Coins</span>
                 </div>
 
                 <Link
                   href="/wallet"
-                  className={`block text-center font-semibold py-4 mt-10 rounded-full transition-all ${
+                  className={`block text-center text-xs sm:text-base font-semibold py-2.5 sm:py-4 mt-5 sm:mt-10 rounded-full transition-all ${
                     pkg.popular
                       ? 'bg-white text-zinc-900 hover:bg-brand-600 hover:text-white'
                       : 'bg-zinc-900 text-white hover:bg-brand-600'
@@ -593,8 +561,10 @@ function CoinPackages() {
           ))}
         </div>
 
-        <p className="text-center mt-14 text-sm text-zinc-500">
-          Alle Preise inkl. MwSt. · SEPA · Kreditkarte · Sofortüberweisung · Paysafecard · <strong className="text-zinc-700">Diskreter Verwendungszweck</strong>
+        <p className="text-center mt-8 sm:mt-14 text-xs sm:text-sm text-zinc-500 leading-relaxed">
+          Alle Preise inkl. MwSt. · SEPA · Kreditkarte · Sofortüberweisung · Paysafecard<br className="sm:hidden" />
+          <span className="hidden sm:inline"> · </span>
+          <strong className="text-zinc-700">Diskreter Verwendungszweck</strong>
         </p>
       </div>
     </section>
@@ -609,14 +579,12 @@ function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-24 md:py-32 bg-white">
-      <div className="max-w-3xl mx-auto px-6">
-        <div className="text-center mb-14">
-          <div className="text-brand-600 font-medium text-xs tracking-[0.3em] uppercase mb-5">Fragen</div>
-          <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-            Bevor du loslegst —
-            <br />
-            <span className="italic text-brand-600">vielleicht das</span>
+    <section id="faq" className="py-16 sm:py-24 md:py-32 bg-white">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10 sm:mb-14">
+          <div className="text-brand-600 font-medium text-[10px] sm:text-xs tracking-[0.3em] uppercase mb-3 sm:mb-5">Fragen</div>
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-semibold leading-tight">
+            Bevor du loslegst — <span className="italic text-brand-600">vielleicht das</span>
           </h2>
         </div>
 
@@ -627,30 +595,30 @@ function FAQ() {
               <div key={i} className="border-t border-zinc-200/60 last:border-b">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className={`w-full py-7 flex items-center justify-between gap-6 text-left group transition-all ${
+                  className={`w-full py-5 sm:py-7 flex items-center justify-between gap-4 sm:gap-6 text-left group transition-all ${
                     isOpen ? 'translate-x-1' : 'hover:translate-x-1'
                   }`}
                 >
-                  <span className={`font-display text-lg md:text-xl transition-all ${
+                  <span className={`font-display text-sm sm:text-lg md:text-xl transition-all ${
                     isOpen ? 'text-brand-600 font-semibold' : 'text-zinc-900 font-medium group-hover:text-brand-600'
                   }`}>
                     {item.q}
                   </span>
                   <span
-                    className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all shrink-0 ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center transition-all shrink-0 ${
                       isOpen
                         ? 'rotate-45 bg-brand-600 border-brand-600 text-white shadow-[0_0_20px_-5px_rgba(236,72,153,0.5)]'
                         : 'border-zinc-300/80 text-zinc-500 group-hover:border-brand-400 group-hover:text-brand-600'
                     }`}
                   >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="sm:w-[11px] sm:h-[11px]">
                       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </span>
                 </button>
-                <div className={`grid transition-all duration-500 ${isOpen ? 'grid-rows-[1fr] opacity-100 pb-7' : 'grid-rows-[0fr] opacity-0'}`}>
+                <div className={`grid transition-all duration-500 ${isOpen ? 'grid-rows-[1fr] opacity-100 pb-5 sm:pb-7' : 'grid-rows-[0fr] opacity-0'}`}>
                   <div className="overflow-hidden">
-                    <p className="text-zinc-600 leading-relaxed text-base max-w-2xl">
+                    <p className="text-zinc-600 leading-relaxed text-sm sm:text-base max-w-2xl">
                       {item.a}
                     </p>
                   </div>
@@ -670,62 +638,60 @@ function FAQ() {
 
 function FinalCTA() {
   return (
-    <section id="final-cta" className="py-24 md:py-32 bg-soft-gradient relative overflow-hidden">
-      {/* Organischere, asymmetrische Glows */}
-      <div className="absolute top-[10%] left-[15%] w-[520px] h-[460px] bg-brand-300/30 rounded-[60%] blur-3xl pointer-events-none rotate-12" />
-      <div className="absolute bottom-[15%] right-[10%] w-[480px] h-[540px] bg-brand-400/20 rounded-[50%] blur-3xl pointer-events-none -rotate-6" />
+    <section id="final-cta" className="py-16 sm:py-24 md:py-32 bg-soft-gradient relative overflow-hidden">
+      <div className="absolute top-[10%] left-[15%] w-[320px] sm:w-[520px] h-[280px] sm:h-[460px] bg-brand-300/30 rounded-[60%] blur-3xl pointer-events-none rotate-12" />
+      <div className="absolute bottom-[15%] right-[10%] w-[300px] sm:w-[480px] h-[340px] sm:h-[540px] bg-brand-400/20 rounded-[50%] blur-3xl pointer-events-none -rotate-6" />
 
-      <div className="relative max-w-5xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-3 mb-8 bg-white/70 backdrop-blur rounded-full pl-3 pr-5 py-2 border border-brand-200/60">
-          <span className="relative flex h-2.5 w-2.5">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
+        <div className="inline-flex items-center gap-2 sm:gap-3 mb-5 sm:mb-8 bg-white/70 backdrop-blur rounded-full pl-2.5 sm:pl-3 pr-3.5 sm:pr-5 py-1.5 sm:py-2 border border-brand-200/60">
+          <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
           </span>
-          <span className="text-zinc-800 text-sm font-medium">Live · 237 Frauen warten</span>
+          <span className="text-zinc-800 text-xs sm:text-sm font-medium">Live · 237 Frauen warten</span>
         </div>
 
-        <h2 className="font-display text-5xl md:text-7xl lg:text-8xl font-semibold leading-[0.9] tracking-tight mb-8">
+        <h2 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-semibold leading-[0.95] sm:leading-[0.9] tracking-tight mb-5 sm:mb-8">
           Sie wartet.
           <br />
-          <span className="italic text-brand-600 text-4xl md:text-6xl lg:text-7xl font-medium">Du auch?</span>
+          <span className="italic text-brand-600 text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-medium">Du auch?</span>
         </h2>
 
-        <p className="text-xl md:text-2xl text-zinc-700 max-w-2xl mx-auto leading-relaxed mb-12">
+        <p className="text-base sm:text-xl md:text-2xl text-zinc-700 max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-12">
           Registrieren in 30 Sekunden.
           <br />
           <strong>Kostenlos starten.</strong>
         </p>
 
-        <Link href="/register" className="group inline-flex items-center gap-3 bg-brand-600 text-white font-bold px-12 py-6 rounded-full hover:bg-brand-700 transition-all duration-300 text-xl shadow-pink-lg hover:scale-105">
+        <Link href="/register" className="group inline-flex items-center gap-2 sm:gap-3 bg-brand-600 text-white font-bold px-7 sm:px-12 py-4 sm:py-6 rounded-full hover:bg-brand-700 transition-all duration-300 text-base sm:text-xl shadow-pink-lg hover:scale-105">
           <span>Jetzt schreiben</span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform sm:w-[22px] sm:h-[22px]">
             <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
 
-        {/* Trust-Line — mit Icons, mehr Spacing */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-zinc-500">
-          <span className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-brand-500">
+        <div className="mt-7 sm:mt-10 flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-8 gap-y-2 sm:gap-y-3 text-xs sm:text-sm text-zinc-500">
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-brand-500 sm:w-3.5 sm:h-3.5">
               <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2"/>
             </svg>
             Kostenlos
           </span>
-          <span className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-brand-500">
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-brand-500 sm:w-3.5 sm:h-3.5">
               <path d="M12 2L4 7v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V7l-8-5z" stroke="currentColor" strokeWidth="2"/>
             </svg>
             Diskret
           </span>
-          <span className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-brand-500">
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-brand-500 sm:w-3.5 sm:h-3.5">
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
               <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             18+ verifiziert
           </span>
-          <span className="flex items-center gap-2">🇩🇪 Made in Germany</span>
+          <span className="flex items-center gap-1.5 sm:gap-2">🇩🇪 Made in Germany</span>
         </div>
       </div>
     </section>
@@ -739,71 +705,68 @@ function FinalCTA() {
 function Footer() {
   return (
     <>
-      {/* Sanfter Übergang von hell zu dunkel */}
-      <div className="h-24 bg-gradient-to-b from-transparent via-zinc-100/40 to-zinc-950 pointer-events-none -mb-1" />
+      <div className="h-16 sm:h-24 bg-gradient-to-b from-transparent via-zinc-100/40 to-zinc-950 pointer-events-none -mb-1" />
 
-      <footer id="footer" className="bg-zinc-950 text-zinc-400 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Trust-Bar — größer, weicher */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 pb-16 border-b border-zinc-800/60">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-brand-400">
+      <footer id="footer" className="bg-zinc-950 text-zinc-400 py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8 mb-10 sm:mb-16 pb-10 sm:pb-16 border-b border-zinc-800/60">
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-brand-400 sm:w-[22px] sm:h-[22px]">
                   <path d="M12 2L4 7v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V7l-8-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
                   <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div>
-                <div className="text-white font-semibold text-sm mb-1">DSGVO-konform</div>
-                <div className="text-xs text-zinc-500">Server in Deutschland</div>
+                <div className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">DSGVO-konform</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500">Server in Deutschland</div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-brand-400">
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-brand-400 sm:w-[22px] sm:h-[22px]">
                   <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </div>
               <div>
-                <div className="text-white font-semibold text-sm mb-1">SSL-verschlüsselt</div>
-                <div className="text-xs text-zinc-500">Ende-zu-Ende</div>
+                <div className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">SSL-verschlüsselt</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500">Ende-zu-Ende</div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
-                <span className="text-brand-400 font-display font-bold text-base">18+</span>
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
+                <span className="text-brand-400 font-display font-bold text-sm sm:text-base">18+</span>
               </div>
               <div>
-                <div className="text-white font-semibold text-sm mb-1">Verifiziert</div>
-                <div className="text-xs text-zinc-500">Alle Nutzer & Creators</div>
+                <div className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">Verifiziert</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500">Alle Nutzer & Creators</div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-brand-400">
+            <div className="flex items-start gap-2.5 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_-6px_rgba(236,72,153,0.2)]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-brand-400 sm:w-[22px] sm:h-[22px]">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                   <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
               <div>
-                <div className="text-white font-semibold text-sm mb-1">24/7 Support</div>
-                <div className="text-xs text-zinc-500">Deutsch · Schnell</div>
+                <div className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">24/7 Support</div>
+                <div className="text-[10px] sm:text-xs text-zinc-500">Deutsch · Schnell</div>
               </div>
             </div>
           </div>
 
-          {/* Footer-Haupt */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-sm">v</div>
-              <span className="font-display text-xl font-semibold text-white">verliebdich</span>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6 mb-6 sm:mb-10">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-xs sm:text-sm">v</div>
+              <span className="font-display text-lg sm:text-xl font-semibold text-white">verliebdich</span>
             </Link>
 
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-xs sm:text-sm">
               <Link href="/impressum" className="hover:text-white transition-colors">Impressum</Link>
               <Link href="/datenschutz" className="hover:text-white transition-colors">Datenschutz</Link>
               <Link href="/agb" className="hover:text-white transition-colors">AGB</Link>
@@ -812,7 +775,7 @@ function Footer() {
             </div>
           </div>
 
-          <div className="pt-8 border-t border-zinc-800/60 text-xs text-zinc-400">
+          <div className="pt-6 sm:pt-8 border-t border-zinc-800/60 text-[10px] sm:text-xs text-zinc-400 leading-relaxed">
             © 2026 verliebdich · Alle Rechte vorbehalten · Ein Service der verliebdich UG (i.G.), Deutschland
           </div>
         </div>
@@ -822,7 +785,7 @@ function Footer() {
 }
 
 // ============================================================================
-// STICKY CTA — subtiler, mit Auto-Hide
+// STICKY CTA
 // ============================================================================
 
 function StickyCTA() {
@@ -835,7 +798,6 @@ function StickyCTA() {
     };
     window.addEventListener('scroll', onScroll);
 
-    // Auto-hide bei Final-CTA und Footer per IntersectionObserver
     const targets = ['final-cta', 'footer'].map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
     if (targets.length === 0) return () => window.removeEventListener('scroll', onScroll);
 
@@ -859,21 +821,21 @@ function StickyCTA() {
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-40 transition-all duration-500 ${
+      className={`fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 transition-all duration-500 ${
         shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
       }`}
     >
       <Link
         href="/register"
-        className="group inline-flex items-center gap-2.5 bg-white/85 backdrop-blur-xl text-zinc-900 font-medium px-4 py-2.5 rounded-full shadow-[0_8px_30px_-8px_rgba(0,0,0,0.15)] border border-zinc-200/60 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all"
+        className="group inline-flex items-center gap-2 sm:gap-2.5 bg-white/85 backdrop-blur-xl text-zinc-900 font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-full shadow-[0_8px_30px_-8px_rgba(0,0,0,0.15)] border border-zinc-200/60 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all"
       >
         <div className="flex -space-x-2">
-          <img src="/creators/creator-5.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-          <img src="/creators/creator-6.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-          <img src="/creators/creator-8.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+          <img src="/creators/creator-5.jpg" alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
+          <img src="/creators/creator-6.jpg" alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
+          <img src="/creators/creator-8.jpg" alt="" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
         </div>
-        <span className="text-sm">Schreiben</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform">
+        <span className="text-xs sm:text-sm">Schreiben</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform sm:w-3.5 sm:h-3.5">
           <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Link>
@@ -918,44 +880,42 @@ function ExitIntent() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-6 animate-fade-up">
-      <div className="max-w-md w-full bg-white rounded-3xl overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/85 backdrop-blur-md p-4 sm:p-6 animate-fade-up">
+      <div className="max-w-md w-full bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
         <div className="relative aspect-[4/3] overflow-hidden">
           <img src="/creators/creator-5.jpg" alt="Lina" className="w-full h-full object-cover" />
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
           <button
             onClick={() => setShow(false)}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/95 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors"
+            className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors"
             aria-label="Schließen"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="sm:w-4 sm:h-4">
               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </button>
-          <div className="absolute bottom-4 left-5 right-5 text-white">
-            <div className="text-xs uppercase tracking-widest opacity-80 mb-1">Berlin · 24</div>
-            <div className="font-display text-3xl font-semibold">Lina</div>
+          <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-5 right-4 sm:right-5 text-white">
+            <div className="text-[10px] sm:text-xs uppercase tracking-widest opacity-80 mb-0.5 sm:mb-1">Berlin · 24</div>
+            <div className="font-display text-2xl sm:text-3xl font-semibold">Lina</div>
           </div>
         </div>
 
-        <div className="p-8 text-center">
-          <h3 className="font-display text-2xl md:text-3xl font-semibold mb-3 leading-tight">
-            Warte — sie schreibt
-            <br />
-            <span className="italic text-brand-600">dir gerade.</span>
+        <div className="p-6 sm:p-8 text-center">
+          <h3 className="font-display text-xl sm:text-2xl md:text-3xl font-semibold mb-2 sm:mb-3 leading-tight">
+            Warte — sie schreibt <span className="italic text-brand-600">dir gerade.</span>
           </h3>
-          <p className="text-zinc-600 mb-6 text-sm leading-relaxed">
+          <p className="text-zinc-600 mb-5 sm:mb-6 text-xs sm:text-sm leading-relaxed">
             Geh nicht, ohne sie kennenzulernen.
           </p>
           <Link
             href="/register"
-            className="block w-full bg-brand-600 text-white font-semibold py-4 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg mb-3"
+            className="block w-full bg-brand-600 text-white text-sm sm:text-base font-semibold py-3 sm:py-4 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg mb-2 sm:mb-3"
           >
             Schauen, was sie schreibt
           </Link>
           <button
             onClick={() => setShow(false)}
-            className="text-zinc-500 text-sm hover:text-zinc-900 transition-colors"
+            className="text-zinc-500 text-xs sm:text-sm hover:text-zinc-900 transition-colors"
           >
             Nein danke, ich gehe
           </button>
@@ -971,25 +931,23 @@ function ExitIntent() {
 
 function CityMatchResult({ city }: { city: string }) {
   return (
-    <section id="nahe" className="py-20 md:py-28 bg-gradient-to-b from-brand-50/40 to-white">
-      <div className="max-w-3xl mx-auto px-6 text-center animate-fade-up">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-600 text-white text-sm font-medium mb-8">
+    <section id="nahe" className="py-12 sm:py-20 md:py-28 bg-gradient-to-b from-brand-50/40 to-white">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center animate-fade-up">
+        <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-brand-600 text-white text-xs sm:text-sm font-medium mb-5 sm:mb-8">
           ✨ Treffer in {city}
         </div>
-        <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight mb-6">
-          <span className="text-brand-600">4 Frauen</span> in der Nähe von
-          <br />
-          <span className="italic">{city}</span> warten <span className="italic text-brand-600">jetzt</span>
+        <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-semibold leading-tight mb-4 sm:mb-6">
+          <span className="text-brand-600">4 Frauen</span> in der Nähe von <span className="italic">{city}</span> warten <span className="italic text-brand-600">jetzt</span>
         </h2>
-        <p className="text-lg text-zinc-600 mb-10 leading-relaxed max-w-xl mx-auto">
+        <p className="text-sm sm:text-lg text-zinc-600 mb-7 sm:mb-10 leading-relaxed max-w-xl mx-auto">
           Registriere dich kostenlos und sieh, wer in deiner Nähe gerade da ist.
         </p>
         <Link
           href="/register"
-          className="inline-flex items-center gap-3 bg-brand-600 text-white font-semibold px-10 py-5 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg text-lg group"
+          className="inline-flex items-center gap-2 sm:gap-3 bg-brand-600 text-white font-semibold px-7 sm:px-10 py-3.5 sm:py-5 rounded-full hover:bg-brand-700 transition-all shadow-pink-lg text-sm sm:text-lg group"
         >
           <span>Treffer kostenlos ansehen</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform sm:w-5 sm:h-5">
             <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
