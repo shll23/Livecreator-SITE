@@ -24,13 +24,6 @@ const PREMIUM_LOCKS = [
   { name: 'Sophia', image: '/creators/creator-real-3-blurred.jpg', coins: 8, label: 'Heute geschossen' },
 ];
 
-const COIN_PACKAGES = [
-  { name: 'Probier', coins: 100, price: '9,99', popular: false },
-  { name: 'Genießer', coins: 250, price: '24,99', popular: true },
-  { name: 'Liebhaber', coins: 500, price: '49,99', popular: false },
-  { name: 'Intensiv', coins: 1000, price: '89,99', popular: false },
-];
-
 const FEATURED_PROFILE = {
   name: 'Lina',
   age: 24,
@@ -43,14 +36,13 @@ const FEATURED_PROFILE = {
   today: 'Hab Lust auf neue Begegnungen heute.',
 };
 
-const FAQ_ITEMS = [
-  { q: 'Wie funktioniert verliebdich?', a: 'verliebdich ist eine Plattform für persönliche Gespräche mit echten Frauen. Du wählst, wer dich interessiert, und beginnst eine Unterhaltung. Bezahlt wird nur, was du nutzt — über Coins, die du flexibel auflädst. Kein Abo, keine Bindung.' },
-  { q: 'Wer schreibt mir?', a: 'Echte Frauen. Jede Creator auf verliebdich wird vor der Freischaltung persönlich verifiziert. Wer dir schreibt, ist die Person, deren Bild du siehst — mit eigenen Worten, eigenem Tag, eigener Stimmung.' },
-  { q: 'Wie laufen Nachrichten ab?', a: 'Eine Nachricht kostet zwischen 7 und 10 Coins — die Creator bestimmt ihren eigenen Preis. Du siehst den Preis immer bevor du schreibst und entscheidest in jedem Moment selbst, wie weit du gehst.' },
-  { q: 'Gibt es ein Abo?', a: 'Nein. Bei verliebdich gibt es keine automatischen Verlängerungen, keine versteckten Kosten, keine Vertragsbindung. Jeder Coin-Kauf ist eine einzelne, freiwillige Entscheidung.' },
-  { q: 'Was bedeutet "exklusive Inhalte"?', a: 'Manche Bilder und Videos teilen die Frauen nur mit denen, die ein konkretes Interesse zeigen. Diese Inhalte schaltest du mit Coins frei — eine Form der Wertschätzung gegenüber den Creators. Du entscheidest jedes Mal neu.' },
-  { q: 'Wie entstehen erste Kontakte?', a: 'Auf verliebdich melden sich oft Creators zuerst — eine Begrüßung, ein erstes Hallo, etwas, das ein Gespräch beginnen lässt. Ab dem Moment, in dem du antwortest, schreibst du direkt mit der jeweiligen Person.' },
-  { q: 'Wie diskret ist verliebdich?', a: 'Server in Deutschland, verschlüsselte Verbindungen, neutraler Verwendungszweck auf deinem Kontoauszug. Dein Klarname bleibt verborgen — Creators sehen nur deinen gewählten Nickname. Was hier passiert, bleibt zwischen euch.' },
+// TODO: Vor Live-Launch durch echte Reviews ersetzen sobald Beta-Tester da sind
+const TESTIMONIALS = [
+  { name: 'Markus', age: 38, city: 'Berlin', text: 'Endlich mal eine Plattform, wo nicht nach 2 Nachrichten ein "Treff dich mit mir"-Bot kommt. Hier schreibt wirklich ein Mensch zurück.', rating: 5 },
+  { name: 'Thomas', age: 42, city: 'München', text: 'Hatte mich schon abgewöhnt, sowas zu nutzen — zu viele Fakes überall. Bei verliebdich merkt man sofort: die Profile sind echt, die Antworten sind echt.', rating: 5 },
+  { name: 'Daniel', age: 35, city: 'Hamburg', text: 'Was ich am meisten schätze: keine versteckten Kosten. Ich zahle pro Nachricht und weiß immer was ich tue. Kein Abo-Wahnsinn.', rating: 5 },
+  { name: 'Sebastian', age: 45, city: 'Köln', text: 'Klare Sache: deutsche Frauen, deutsche Server, deutsche Sprache. Und Frauen die wirklich antworten — nicht nach Skript.', rating: 5 },
+  { name: 'Florian', age: 31, city: 'Frankfurt', text: 'Habe drei andere Seiten ausprobiert. Überall Bots oder Kostenfallen. Hier ist es einfach ehrlich. Punkt.', rating: 5 },
 ];
 
 // ============================================================================
@@ -100,7 +92,32 @@ function AgeGate({ onConfirm }: { onConfirm: () => void }) {
 }
 
 // ============================================================================
-// HEADER — kompakter, weniger Padding
+// LOGO COMPONENT — Wortmarke mit dezentem Herz
+// ============================================================================
+
+function Logo({ size = 'normal', white = false }: { size?: 'small' | 'normal' | 'large'; white?: boolean }) {
+  const heartSize = size === 'small' ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : size === 'large' ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-3.5 h-3.5 sm:w-4 sm:h-4';
+  const textSize = size === 'small' ? 'text-base sm:text-lg' : size === 'large' ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-2xl';
+  const textColor = white ? 'text-white' : 'text-zinc-900';
+
+  return (
+    <span className="inline-flex items-center gap-1.5 sm:gap-2 group">
+      <svg
+        viewBox="0 0 24 24"
+        className={`${heartSize} text-brand-600 group-hover:scale-110 transition-transform`}
+        fill="currentColor"
+      >
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      </svg>
+      <span className={`font-display ${textSize} font-semibold tracking-tight ${textColor}`}>
+        verliebdich
+      </span>
+    </span>
+  );
+}
+
+// ============================================================================
+// HEADER
 // ============================================================================
 
 function Header() {
@@ -115,9 +132,8 @@ function Header() {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2' : 'bg-transparent py-2.5'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1.5 group">
-          <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-xs sm:text-lg group-hover:scale-110 transition-transform">v</div>
-          <span className="font-display text-base sm:text-2xl font-semibold tracking-tight">verliebdich</span>
+        <Link href="/" className="flex items-center">
+          <Logo />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-700">
           <a href="#live" className="hover:text-brand-600 transition-colors flex items-center gap-2">
@@ -125,8 +141,7 @@ function Header() {
             Live
           </a>
           <a href="#top" className="hover:text-brand-600 transition-colors">Begegnungen</a>
-          <a href="#preise" className="hover:text-brand-600 transition-colors">Mitgliedschaft</a>
-          <a href="#faq" className="hover:text-brand-600 transition-colors">Fragen</a>
+          <a href="#stimmen" className="hover:text-brand-600 transition-colors">Stimmen</a>
         </nav>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/login" className="hidden sm:inline-block text-sm font-medium text-zinc-700 hover:text-brand-600 transition-colors">Anmelden</Link>
@@ -138,20 +153,18 @@ function Header() {
 }
 
 // ============================================================================
-// HERO — kompakt, kein min-h-screen mehr
+// HERO — Lina-Bild RAUS, nur linke Spalte, entzerrt
 // ============================================================================
 
 function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
   const [onlineCount, setOnlineCount] = useState(237);
-  const [bubbleVisible, setBubbleVisible] = useState(false);
   const [city, setCity] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
       setOnlineCount((prev) => prev + (Math.random() > 0.5 ? 1 : -1));
     }, 4000);
-    const timer = setTimeout(() => setBubbleVisible(true), 1500);
-    return () => { clearInterval(interval); clearTimeout(timer); };
+    return () => clearInterval(interval);
   }, []);
 
   const handleCitySubmit = () => {
@@ -159,104 +172,68 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
   };
 
   return (
-    <section className="relative overflow-hidden pt-14 sm:pt-24 pb-6 sm:pb-16 bg-soft-gradient">
-      <div className="absolute top-[20%] -left-20 sm:-left-32 w-[280px] sm:w-[480px] h-[320px] sm:h-[520px] bg-brand-300/25 rounded-[50%] blur-3xl pointer-events-none rotate-12" />
+    <section className="relative overflow-hidden pt-20 sm:pt-28 pb-10 sm:pb-20 bg-soft-gradient">
+      <div className="absolute top-[15%] -left-20 sm:-left-32 w-[320px] sm:w-[520px] h-[360px] sm:h-[560px] bg-brand-300/30 rounded-[50%] blur-3xl pointer-events-none rotate-12" />
       <div className="absolute bottom-[10%] right-[-15%] w-[380px] sm:w-[640px] h-[340px] sm:h-[540px] bg-brand-400/20 rounded-[60%] blur-3xl pointer-events-none -rotate-6" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-12 gap-5 sm:gap-10 items-center w-full">
-        <div className="md:col-span-6 lg:col-span-6 animate-fade-up">
-          {/* Online-Badge */}
-          <div className="inline-flex items-center gap-1.5 sm:gap-3 mb-3 sm:mb-7 bg-white/70 backdrop-blur rounded-full pl-2 sm:pl-3 pr-3 sm:pr-5 py-1 sm:py-2 border border-brand-200/60">
-            <span className="relative flex h-1.5 w-1.5 sm:h-2.5 sm:w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
-            </span>
-            <span className="text-zinc-800 text-[11px] sm:text-sm font-medium">
-              <span className="font-display text-brand-700 font-bold tabular-nums">{onlineCount}</span> Frauen online
-            </span>
-          </div>
+      <div className="relative max-w-3xl mx-auto px-5 sm:px-6 text-center sm:text-left">
+        {/* Online-Badge — zentriert auf Mobile */}
+        <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 bg-white/70 backdrop-blur rounded-full pl-2.5 sm:pl-3 pr-4 sm:pr-5 py-1.5 sm:py-2 border border-brand-200/60">
+          <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
+          </span>
+          <span className="text-zinc-800 text-xs sm:text-sm font-medium">
+            <span className="font-display text-brand-700 font-bold tabular-nums">{onlineCount}</span> Frauen online
+          </span>
+        </div>
 
-          {/* HEADLINE — kompakt, 24px Mobile */}
-          <h1 className="font-display font-semibold leading-[1] tracking-tight text-zinc-900">
-            <span className="block text-2xl sm:text-5xl md:text-6xl lg:text-7xl">Sie <span className="italic text-brand-600/90 font-medium">wartet</span></span>
-            <span className="block text-2xl sm:text-5xl md:text-6xl lg:text-7xl mt-0.5">auf dich.</span>
-          </h1>
+        {/* HEADLINE — mit mehr Atem, leading-tight statt 0.95 */}
+        <h1 className="font-display font-semibold leading-[1.05] tracking-tight text-zinc-900 mb-5 sm:mb-7">
+          <span className="block text-4xl sm:text-6xl md:text-7xl">
+            Sie <span className="italic text-brand-600/90 font-medium">wartet</span>
+          </span>
+          <span className="block text-4xl sm:text-6xl md:text-7xl mt-1 sm:mt-2">
+            auf dich.
+          </span>
+        </h1>
 
-          <p className="mt-3 sm:mt-7 text-xs sm:text-base md:text-lg text-zinc-700 max-w-lg leading-relaxed">
-            Schreib jetzt mit einer der <strong className="text-brand-700">{onlineCount} Frauen</strong>, die gerade online sind. <span className="font-medium">Diskret. Direkt. Echt.</span>
-          </p>
+        <p className="text-sm sm:text-lg text-zinc-700 max-w-xl mx-auto sm:mx-0 leading-relaxed mb-7 sm:mb-10">
+          Schreib jetzt mit einer der <strong className="text-brand-700">{onlineCount} Frauen</strong>, die gerade online sind. <span className="font-medium">Diskret. Direkt. Echt.</span>
+        </p>
 
-          {/* Stadt-Input — kompakter */}
-          <div className="mt-4 sm:mt-8">
-            <label className="block text-[9px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-3">
-              Wer ist in deiner Nähe?
-            </label>
-            <div className="flex flex-col gap-1.5 max-w-md bg-white rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-[0_4px_24px_-8px_rgba(236,72,153,0.15)] border border-zinc-200/80">
-              <div className="flex items-center gap-1.5 flex-1 px-2.5 sm:px-4">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-zinc-400 flex-shrink-0">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
-                </svg>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCitySubmit()}
-                  placeholder="Deine Stadt"
-                  className="flex-1 py-2 sm:py-3 text-xs sm:text-base bg-transparent text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={handleCitySubmit}
-                className="bg-brand-600 text-white text-xs sm:text-base font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-brand-700 transition-all whitespace-nowrap"
-              >
-                Frauen in deiner Nähe finden
-              </button>
+        {/* Stadt-Input */}
+        <div className="max-w-md mx-auto sm:mx-0">
+          <label className="block text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-2 sm:mb-3">
+            Singles in deiner Nähe?
+          </label>
+          <div className="flex flex-col gap-2 bg-white rounded-xl sm:rounded-2xl p-1.5 sm:p-2 shadow-[0_4px_24px_-8px_rgba(236,72,153,0.15)] border border-zinc-200/80">
+            <div className="flex items-center gap-2 flex-1 px-3 sm:px-4">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-zinc-400 flex-shrink-0">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
+              </svg>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCitySubmit()}
+                placeholder="Deine Stadt"
+                className="flex-1 py-2.5 sm:py-3 text-sm sm:text-base bg-transparent text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+              />
             </div>
+            <button
+              onClick={handleCitySubmit}
+              className="bg-brand-600 text-white text-sm sm:text-base font-semibold px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:bg-brand-700 transition-all whitespace-nowrap"
+            >
+              Singles in deiner Nähe finden
+            </button>
           </div>
 
-          {/* Trust-Line — kompakter */}
-          <div className="mt-3 sm:mt-8 flex flex-wrap items-center gap-x-3 sm:gap-x-5 gap-y-1 text-[10px] sm:text-sm text-zinc-500">
+          {/* Trust-Line */}
+          <div className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center sm:justify-start gap-x-3 sm:gap-x-5 gap-y-1 text-[11px] sm:text-sm text-zinc-500">
             <span className="flex items-center gap-1"><span className="text-brand-600">·</span> Kein Abo</span>
             <span className="flex items-center gap-1"><span className="text-brand-600">·</span> 100% diskret</span>
             <span className="flex items-center gap-1"><span className="text-brand-600">·</span> 18+ verifiziert</span>
-          </div>
-        </div>
-
-        {/* Hero-Bild — DEUTLICH kompakter auf Mobile */}
-        <div className="md:col-span-6 lg:col-span-6 relative animate-fade-up mt-3 sm:mt-0" style={{ animationDelay: '200ms' }}>
-          <div className="relative aspect-[4/5] w-full max-w-[240px] sm:max-w-[480px] mx-auto">
-            <div className="absolute inset-0 rounded-xl sm:rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)]">
-              <img src="/creators/creator-5.jpg" alt="Lina" className="w-full h-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-              <div className="absolute top-2.5 right-2.5 sm:top-6 sm:right-6 flex items-center gap-1 sm:gap-2 bg-white/95 backdrop-blur px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full shadow-lg">
-                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500"></span>
-                </span>
-                <span className="text-[9px] sm:text-xs font-semibold text-zinc-900">Online</span>
-              </div>
-
-              <div className="absolute bottom-3 sm:bottom-8 left-3 sm:left-8 right-3 sm:right-8 text-white">
-                <div className="text-[8px] sm:text-xs font-medium tracking-[0.2em] uppercase opacity-80 mb-0.5 sm:mb-2">Berlin · 24</div>
-                <div className="font-display text-lg sm:text-4xl font-semibold mb-1 sm:mb-3">Lina</div>
-                <p className="text-[10px] sm:text-sm italic leading-snug opacity-95 line-clamp-2">"Hab Lust auf neue Begegnungen heute."</p>
-              </div>
-            </div>
-
-            {/* Floating Message — nur Desktop */}
-            <div className={`hidden sm:block absolute -bottom-8 right-4 md:-right-4 bg-white/85 backdrop-blur-xl rounded-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.18)] px-4 py-3 max-w-[230px] border border-white/60 transition-all duration-700 ${bubbleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="flex items-start gap-2.5">
-                <img src="/creators/creator-5.jpg" alt="" className="w-7 h-7 rounded-full object-cover" />
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-semibold text-zinc-900">Lina</span>
-                    <span className="text-[10px] text-zinc-500">jetzt</span>
-                  </div>
-                  <div className="text-sm text-zinc-700">"Hey... du gefällst mir 💋"</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -265,16 +242,16 @@ function Hero({ onCityFound }: { onCityFound: (city: string) => void }) {
 }
 
 // ============================================================================
-// LIVE STRIP — Cards 50% kleiner, 2-Spalten auf Mobile
+// LIVE STRIP
 // ============================================================================
 
 function LiveStrip() {
   const onlineCreators = CREATORS.filter((c) => c.online);
 
   return (
-    <section id="live" className="py-8 sm:py-16 md:py-20 bg-white border-y border-zinc-200/60">
+    <section id="live" className="py-10 sm:py-20 bg-white border-y border-zinc-200/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-end justify-between mb-4 sm:mb-8 gap-3">
+        <div className="flex items-end justify-between mb-5 sm:mb-8 gap-3">
           <div>
             <div className="flex items-center gap-1.5 sm:gap-3 mb-1.5 sm:mb-3">
               <span className="relative flex h-1.5 w-1.5 sm:h-2.5 sm:w-2.5">
@@ -283,7 +260,7 @@ function LiveStrip() {
               </span>
               <span className="text-green-700 font-semibold text-[9px] sm:text-xs tracking-[0.2em] uppercase">Jetzt Live</span>
             </div>
-            <h2 className="font-display text-base sm:text-3xl md:text-4xl font-semibold leading-tight">
+            <h2 className="font-display text-xl sm:text-3xl md:text-4xl font-semibold leading-tight">
               <span className="text-brand-600">{onlineCreators.length}</span> Frauen warten <span className="italic">jetzt</span>
             </h2>
           </div>
@@ -292,21 +269,20 @@ function LiveStrip() {
           </Link>
         </div>
 
-        {/* Cards — drastisch schmaler auf Mobile */}
         <div
-          className="flex gap-2 sm:gap-4 overflow-x-auto pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 snap-x snap-mandatory"
+          className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <style jsx>{`
             div::-webkit-scrollbar { display: none; }
           `}</style>
           {CREATORS.map((c) => (
-            <Link key={c.name} href="/register" className="group flex-shrink-0 w-[150px] sm:w-[300px] snap-start relative">
+            <Link key={c.name} href="/register" className="group flex-shrink-0 w-[160px] sm:w-[300px] snap-start relative">
               <div className="relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden shadow group-hover:shadow-pink-lg transition-all">
                 <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
-                <div className="absolute top-1.5 sm:top-3 left-1.5 sm:left-3">
+                <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
                   {c.online ? (
                     <span className="flex items-center gap-1 bg-white/95 backdrop-blur text-zinc-900 text-[9px] sm:text-[11px] font-semibold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow">
                       <span className="relative flex h-1 w-1 sm:h-2 sm:w-2">
@@ -317,7 +293,7 @@ function LiveStrip() {
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 bg-zinc-100/90 backdrop-blur text-zinc-500 text-[9px] sm:text-[11px] font-medium px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full">
-                      <span className="w-0.5 h-0.5 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-400" />
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-400" />
                       Offline
                     </span>
                   )}
@@ -335,8 +311,8 @@ function LiveStrip() {
                   </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-5 text-white">
-                  <div className="font-display text-sm sm:text-2xl font-semibold mb-0">{c.name} · {c.age}</div>
+                <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-5 text-white">
+                  <div className="font-display text-base sm:text-2xl font-semibold mb-0">{c.name} · {c.age}</div>
                   <div className="text-[9px] sm:text-xs opacity-75 mb-1 sm:mb-3 flex items-center gap-0.5 sm:gap-1.5">
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="sm:w-2.5 sm:h-2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
                     {c.city}
@@ -356,19 +332,19 @@ function LiveStrip() {
 }
 
 // ============================================================================
-// PREMIUM LOCKS — 2 Spalten auf Mobile, kompakter
+// PREMIUM LOCKS
 // ============================================================================
 
 function PremiumLocks() {
   return (
-    <section className="py-10 sm:py-24 md:py-32 bg-zinc-900 text-white relative overflow-hidden">
+    <section className="py-12 sm:py-28 bg-zinc-900 text-white relative overflow-hidden">
       <div className="absolute top-[15%] left-[20%] w-[260px] sm:w-[420px] h-[300px] sm:h-[480px] bg-brand-600/25 rounded-[55%] blur-3xl pointer-events-none rotate-12" />
       <div className="absolute bottom-[10%] right-[15%] w-[240px] sm:w-[380px] h-[260px] sm:h-[420px] bg-brand-700/20 rounded-[45%] blur-3xl pointer-events-none -rotate-6" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-7 sm:mb-16">
           <div className="text-brand-400 font-medium text-[9px] sm:text-xs tracking-[0.3em] uppercase mb-2 sm:mb-6">Exklusiv</div>
-          <h2 className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+          <h2 className="font-display text-xl sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
             Was sie nur dir <span className="italic text-brand-400">privat zeigt</span>
           </h2>
           <p className="mt-2 sm:mt-6 text-zinc-300 leading-relaxed text-xs sm:text-lg">
@@ -376,7 +352,7 @@ function PremiumLocks() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 max-w-5xl mx-auto">
           {PREMIUM_LOCKS.map((lock, i) => (
             <div key={i} className="group relative aspect-[3/4] rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
               <img src={lock.image} alt="Locked" className="w-full h-full object-cover" />
@@ -402,7 +378,7 @@ function PremiumLocks() {
           ))}
         </div>
 
-        <p className="text-center mt-5 sm:mt-12 text-zinc-400 text-[11px] sm:text-sm">
+        <p className="text-center mt-6 sm:mt-12 text-zinc-400 text-[11px] sm:text-sm">
           Diskret & Ohne Verpflichtung.
         </p>
       </div>
@@ -411,24 +387,24 @@ function PremiumLocks() {
 }
 
 // ============================================================================
-// PROFILE SHOWCASE — kompakter, weniger Padding
+// PROFILE SHOWCASE — Bild LINKS, Daten RECHTS (auf Mobile: oben/unten)
 // ============================================================================
 
 function ProfileShowcase() {
   return (
-    <section className="py-10 sm:py-24 md:py-32 bg-white">
+    <section className="py-12 sm:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-7 sm:mb-16">
           <div className="text-brand-600 font-medium text-[9px] sm:text-xs tracking-[0.3em] uppercase mb-2 sm:mb-6">Profile</div>
-          <h2 className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+          <h2 className="font-display text-xl sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
             Lern sie erst kennen, <span className="italic text-brand-600">dann schreib</span>
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-12 gap-4 sm:gap-8 md:gap-12 items-start md:items-center max-w-6xl mx-auto">
-          {/* Bild — kompakter */}
-          <div className="md:col-span-5 lg:col-span-5">
-            <div className="relative aspect-[4/5] rounded-xl sm:rounded-3xl overflow-hidden shadow-xl max-w-[200px] sm:max-w-none mx-auto">
+        <div className="grid md:grid-cols-12 gap-5 sm:gap-10 items-start max-w-6xl mx-auto">
+          {/* Bild — LINKS, kompakt auf Mobile */}
+          <div className="md:col-span-5">
+            <div className="relative aspect-[4/5] rounded-xl sm:rounded-3xl overflow-hidden shadow-xl max-w-[240px] sm:max-w-none mx-auto">
               <img src={FEATURED_PROFILE.image} alt={FEATURED_PROFILE.name} className="w-full h-full object-cover" />
               <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center gap-1 sm:gap-2 bg-white/95 backdrop-blur px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full shadow-lg">
                 <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
@@ -440,22 +416,22 @@ function ProfileShowcase() {
             </div>
           </div>
 
-          {/* Profil-Details — kompakter */}
-          <div className="md:col-span-7 lg:col-span-7">
-            <div className="mb-3 sm:mb-8">
-              <div className="font-display text-xl sm:text-5xl font-semibold mb-0.5 sm:mb-2">{FEATURED_PROFILE.name} · {FEATURED_PROFILE.age}</div>
+          {/* Profil-Details — RECHTS */}
+          <div className="md:col-span-7">
+            <div className="mb-4 sm:mb-7">
+              <div className="font-display text-2xl sm:text-5xl font-semibold mb-0.5 sm:mb-2 leading-tight">{FEATURED_PROFILE.name} · {FEATURED_PROFILE.age}</div>
               <div className="text-xs sm:text-base text-zinc-500 flex items-center gap-1">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="sm:w-3.5 sm:h-3.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="sm:w-3.5 sm:h-3.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
                 {FEATURED_PROFILE.city}
               </div>
             </div>
 
-            <div className="mb-3 sm:mb-8">
+            <div className="mb-4 sm:mb-7">
               <div className="text-[9px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-3">Über mich</div>
               <p className="text-xs sm:text-lg text-zinc-700 leading-relaxed italic">"{FEATURED_PROFILE.bio}"</p>
             </div>
 
-            <div className="mb-3 sm:mb-8">
+            <div className="mb-4 sm:mb-7">
               <div className="text-[9px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-3">Worauf ich stehe</div>
               <div className="flex flex-wrap gap-1 sm:gap-2">
                 {FEATURED_PROFILE.likes.map((like) => (
@@ -466,7 +442,7 @@ function ProfileShowcase() {
               </div>
             </div>
 
-            <div className="mb-3 sm:mb-8">
+            <div className="mb-4 sm:mb-7">
               <div className="text-[9px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1.5 sm:mb-3">Was ich suche</div>
               <div className="flex flex-wrap gap-1 sm:gap-2">
                 {FEATURED_PROFILE.looking.map((item) => (
@@ -477,7 +453,7 @@ function ProfileShowcase() {
               </div>
             </div>
 
-            <div className="mb-4 sm:mb-10 p-3 sm:p-5 rounded-lg sm:rounded-2xl bg-gradient-to-br from-brand-50/60 to-transparent border border-brand-100/60">
+            <div className="mb-5 sm:mb-8 p-3 sm:p-5 rounded-lg sm:rounded-2xl bg-gradient-to-br from-brand-50/60 to-transparent border border-brand-100/60">
               <div className="text-[9px] sm:text-xs font-medium tracking-[0.2em] uppercase text-brand-600 mb-1 sm:mb-2">Heute</div>
               <p className="text-xs sm:text-base text-zinc-800 italic">"{FEATURED_PROFILE.today}"</p>
             </div>
@@ -496,80 +472,67 @@ function ProfileShowcase() {
 }
 
 // ============================================================================
-// COIN PAKETE — 2 Spalten Mobile, kompakter
+// TESTIMONIALS — ersetzt FAQ
 // ============================================================================
 
-function CoinPackages() {
+function Testimonials() {
   return (
-    <section id="preise" className="py-10 sm:py-24 md:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-brand-50/30 to-white pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-[240px] sm:w-[400px] h-[240px] sm:h-[400px] bg-brand-200/20 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-20">
-          <div className="text-brand-600 font-medium text-[9px] sm:text-xs tracking-[0.3em] uppercase mb-2 sm:mb-6">Mitgliedschaft</div>
-          <h2 className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
-            Du zahlst nur, <span className="italic text-brand-600">was du gibst</span>
+    <section id="stimmen" className="py-12 sm:py-28 bg-gradient-to-b from-white via-brand-50/30 to-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-14">
+          <div className="text-brand-600 font-medium text-[9px] sm:text-xs tracking-[0.3em] uppercase mb-2 sm:mb-5">Stimmen</div>
+          <h2 className="font-display text-xl sm:text-4xl md:text-5xl font-semibold leading-tight">
+            Das sagen <span className="italic text-brand-600">unsere Nutzer</span>
           </h2>
-          <p className="mt-2 sm:mt-6 text-xs sm:text-lg text-zinc-600 leading-relaxed">
-            Du behältst jederzeit die volle Kontrolle.
-          </p>
         </div>
 
-        {/* Packages — 2 Cols Mobile, kompakter */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-7 max-w-6xl mx-auto">
-          {COIN_PACKAGES.map((pkg) => (
+        {/* Cards — Mobile: 1 Spalte mit horizontal scroll, Desktop: 2-3 Spalten */}
+        <div
+          className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 overflow-x-auto sm:overflow-visible pb-3 sm:pb-0 -mx-4 sm:mx-0 px-4 sm:px-0 snap-x snap-mandatory sm:snap-none"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <style jsx>{`
+            div::-webkit-scrollbar { display: none; }
+          `}</style>
+          {TESTIMONIALS.map((t, i) => (
             <div
-              key={pkg.name}
-              className={`relative rounded-xl sm:rounded-[2rem] p-3 sm:p-10 transition-all duration-500 ${
-                pkg.popular
-                  ? 'bg-gradient-to-br from-zinc-900 to-zinc-800 text-white shadow-[0_20px_60px_-15px_rgba(236,72,153,0.25)] md:scale-[1.03]'
-                  : 'bg-white border border-zinc-200/80 hover:border-brand-200 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)]'
-              }`}
+              key={i}
+              className="flex-shrink-0 sm:flex-shrink w-[260px] sm:w-auto snap-start bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-zinc-200/60 shadow-[0_4px_24px_-12px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_40px_-15px_rgba(236,72,153,0.15)] transition-all"
             >
-              {pkg.popular && (
-                <div className="absolute inset-0 rounded-xl sm:rounded-[2rem] bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
-              )}
+              {/* Sterne */}
+              <div className="flex items-center gap-0.5 mb-3 sm:mb-4">
+                {Array.from({ length: t.rating }).map((_, idx) => (
+                  <svg key={idx} width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-brand-500 sm:w-4 sm:h-4">
+                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+                  </svg>
+                ))}
+              </div>
 
-              {pkg.popular && (
-                <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[7px] sm:text-[10px] font-semibold tracking-[0.1em] sm:tracking-[0.2em] uppercase px-2 sm:px-3.5 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
-                  Empfohlen
+              {/* Text */}
+              <p className="text-zinc-700 text-xs sm:text-base leading-relaxed italic mb-4 sm:mb-5">
+                "{t.text}"
+              </p>
+
+              {/* Name + Stadt */}
+              <div className="flex items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-zinc-100">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-display font-bold text-xs sm:text-base">
+                  {t.name[0]}
                 </div>
-              )}
-
-              <div className="relative">
-                <div className={`text-[8px] sm:text-xs font-medium tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-2 sm:mb-5 ${pkg.popular ? 'text-brand-300' : 'text-brand-600'}`}>
-                  {pkg.name}
+                <div>
+                  <div className="font-semibold text-zinc-900 text-xs sm:text-sm">{t.name}, {t.age}</div>
+                  <div className="text-[10px] sm:text-xs text-zinc-500 flex items-center gap-1">
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="sm:w-2.5 sm:h-2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                    {t.city}
+                  </div>
                 </div>
-
-                <div className="flex items-baseline gap-0.5 mb-0.5">
-                  <span className="font-display text-xl sm:text-5xl font-semibold">{pkg.price}</span>
-                  <span className={`text-xs sm:text-lg ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>€</span>
-                </div>
-
-                <div className={`font-display text-xs sm:text-2xl font-medium mt-2 sm:mt-6 ${pkg.popular ? 'text-zinc-100' : 'text-zinc-800'}`}>
-                  {pkg.coins} <span className={`text-[10px] sm:text-base font-sans ${pkg.popular ? 'text-zinc-400' : 'text-zinc-500'}`}>Coins</span>
-                </div>
-
-                <Link
-                  href="/wallet"
-                  className={`block text-center text-[10px] sm:text-base font-semibold py-1.5 sm:py-4 mt-3 sm:mt-10 rounded-full transition-all ${
-                    pkg.popular
-                      ? 'bg-white text-zinc-900 hover:bg-brand-600 hover:text-white'
-                      : 'bg-zinc-900 text-white hover:bg-brand-600'
-                  }`}
-                >
-                  Auswählen
-                </Link>
               </div>
             </div>
           ))}
         </div>
 
-        <p className="text-center mt-5 sm:mt-14 text-[10px] sm:text-sm text-zinc-500 leading-relaxed">
-          Alle Preise inkl. MwSt. · SEPA · Kreditkarte · Sofortüberweisung · Paysafecard<br className="sm:hidden" />
-          <span className="hidden sm:inline"> · </span>
-          <strong className="text-zinc-700">Diskreter Verwendungszweck</strong>
+        {/* Disclaimer — sehr klein, am Ende der Sektion */}
+        <p className="text-center mt-6 sm:mt-10 text-[9px] sm:text-[11px] text-zinc-400 leading-relaxed max-w-xl mx-auto px-4">
+          Beispielhafte Nutzererfahrungen. Eigene Bewertungen kannst du nach deiner Registrierung abgeben.
         </p>
       </div>
     </section>
@@ -577,78 +540,17 @@ function CoinPackages() {
 }
 
 // ============================================================================
-// FAQ — kompakter
-// ============================================================================
-
-function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
-  return (
-    <section id="faq" className="py-10 sm:py-24 md:py-32 bg-white">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-6 sm:mb-14">
-          <div className="text-brand-600 font-medium text-[9px] sm:text-xs tracking-[0.3em] uppercase mb-2 sm:mb-5">Fragen</div>
-          <h2 className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight">
-            Bevor du loslegst — <span className="italic text-brand-600">vielleicht das</span>
-          </h2>
-        </div>
-
-        <div className="space-y-0">
-          {FAQ_ITEMS.map((item, i) => {
-            const isOpen = openIndex === i;
-            return (
-              <div key={i} className="border-t border-zinc-200/60 last:border-b">
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className={`w-full py-3 sm:py-7 flex items-center justify-between gap-3 sm:gap-6 text-left group transition-all ${
-                    isOpen ? 'translate-x-1' : 'hover:translate-x-1'
-                  }`}
-                >
-                  <span className={`font-display text-xs sm:text-lg md:text-xl transition-all ${
-                    isOpen ? 'text-brand-600 font-semibold' : 'text-zinc-900 font-medium group-hover:text-brand-600'
-                  }`}>
-                    {item.q}
-                  </span>
-                  <span
-                    className={`w-5 h-5 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center transition-all shrink-0 ${
-                      isOpen
-                        ? 'rotate-45 bg-brand-600 border-brand-600 text-white shadow-[0_0_20px_-5px_rgba(236,72,153,0.5)]'
-                        : 'border-zinc-300/80 text-zinc-500 group-hover:border-brand-400 group-hover:text-brand-600'
-                    }`}
-                  >
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" className="sm:w-[11px] sm:h-[11px]">
-                      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                </button>
-                <div className={`grid transition-all duration-500 ${isOpen ? 'grid-rows-[1fr] opacity-100 pb-3 sm:pb-7' : 'grid-rows-[0fr] opacity-0'}`}>
-                  <div className="overflow-hidden">
-                    <p className="text-zinc-600 leading-relaxed text-xs sm:text-base max-w-2xl">
-                      {item.a}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ============================================================================
-// FINAL CTA — kompakt
+// FINAL CTA
 // ============================================================================
 
 function FinalCTA() {
   return (
-    <section id="final-cta" className="py-10 sm:py-24 md:py-32 bg-soft-gradient relative overflow-hidden">
+    <section id="final-cta" className="py-12 sm:py-28 bg-soft-gradient relative overflow-hidden">
       <div className="absolute top-[10%] left-[15%] w-[280px] sm:w-[520px] h-[260px] sm:h-[460px] bg-brand-300/30 rounded-[60%] blur-3xl pointer-events-none rotate-12" />
       <div className="absolute bottom-[15%] right-[10%] w-[260px] sm:w-[480px] h-[300px] sm:h-[540px] bg-brand-400/20 rounded-[50%] blur-3xl pointer-events-none -rotate-6" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <div className="inline-flex items-center gap-1.5 sm:gap-3 mb-3 sm:mb-8 bg-white/70 backdrop-blur rounded-full pl-2 sm:pl-3 pr-3 sm:pr-5 py-1 sm:py-2 border border-brand-200/60">
+        <div className="inline-flex items-center gap-1.5 sm:gap-3 mb-4 sm:mb-8 bg-white/70 backdrop-blur rounded-full pl-2 sm:pl-3 pr-3 sm:pr-5 py-1 sm:py-2 border border-brand-200/60">
           <span className="relative flex h-1.5 w-1.5 sm:h-2.5 sm:w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 bg-green-500"></span>
@@ -656,22 +558,22 @@ function FinalCTA() {
           <span className="text-zinc-800 text-[10px] sm:text-sm font-medium">Live · 237 Frauen warten</span>
         </div>
 
-        <h2 className="font-display text-2xl sm:text-5xl md:text-7xl lg:text-8xl font-semibold leading-[1] tracking-tight mb-3 sm:mb-8">
-          Sie wartet. <span className="italic text-brand-600 text-xl sm:text-4xl md:text-6xl lg:text-7xl font-medium">Du auch?</span>
+        <h2 className="font-display text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold leading-[1.05] tracking-tight mb-3 sm:mb-8">
+          Sie wartet. <span className="italic text-brand-600 text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-medium">Du auch?</span>
         </h2>
 
-        <p className="text-xs sm:text-xl md:text-2xl text-zinc-700 max-w-2xl mx-auto leading-relaxed mb-5 sm:mb-12">
+        <p className="text-xs sm:text-xl md:text-2xl text-zinc-700 max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-12">
           Registrieren in 30 Sekunden. <strong>Kostenlos starten.</strong>
         </p>
 
-        <Link href="/register" className="group inline-flex items-center gap-1.5 sm:gap-3 bg-brand-600 text-white font-bold px-5 sm:px-12 py-2.5 sm:py-6 rounded-full hover:bg-brand-700 transition-all duration-300 text-xs sm:text-xl shadow-pink-lg hover:scale-105">
+        <Link href="/register" className="group inline-flex items-center gap-1.5 sm:gap-3 bg-brand-600 text-white font-bold px-6 sm:px-12 py-3 sm:py-6 rounded-full hover:bg-brand-700 transition-all duration-300 text-sm sm:text-xl shadow-pink-lg hover:scale-105">
           <span>Jetzt schreiben</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform sm:w-[22px] sm:h-[22px]">
             <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
 
-        <div className="mt-4 sm:mt-10 flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-8 gap-y-1.5 sm:gap-y-3 text-[10px] sm:text-sm text-zinc-500">
+        <div className="mt-5 sm:mt-10 flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-8 gap-y-1.5 sm:gap-y-3 text-[10px] sm:text-sm text-zinc-500">
           <span className="flex items-center gap-1">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-brand-500 sm:w-3.5 sm:h-3.5">
               <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -700,15 +602,15 @@ function FinalCTA() {
 }
 
 // ============================================================================
-// FOOTER — kompakter
+// FOOTER
 // ============================================================================
 
 function Footer() {
   return (
     <>
-      <div className="h-10 sm:h-24 bg-gradient-to-b from-transparent via-zinc-100/40 to-zinc-950 pointer-events-none -mb-1" />
+      <div className="h-12 sm:h-24 bg-gradient-to-b from-transparent via-zinc-100/40 to-zinc-950 pointer-events-none -mb-1" />
 
-      <footer id="footer" className="bg-zinc-950 text-zinc-400 py-8 sm:py-20">
+      <footer id="footer" className="bg-zinc-950 text-zinc-400 py-8 sm:py-20 pb-24 sm:pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-8 mb-6 sm:mb-16 pb-6 sm:pb-16 border-b border-zinc-800/60">
             <div className="flex items-start gap-2">
@@ -762,9 +664,8 @@ function Footer() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-6 mb-4 sm:mb-10">
-            <Link href="/" className="flex items-center gap-1.5">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-display font-semibold text-xs sm:text-sm">v</div>
-              <span className="font-display text-base sm:text-xl font-semibold text-white">verliebdich</span>
+            <Link href="/" className="flex items-center">
+              <Logo size="small" white />
             </Link>
 
             <div className="flex flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-[10px] sm:text-sm">
@@ -786,7 +687,7 @@ function Footer() {
 }
 
 // ============================================================================
-// STICKY CTA
+// STICKY CTA — GROSSER breiter Button am unteren Rand (Mobile-First UX)
 // ============================================================================
 
 function StickyCTA() {
@@ -795,9 +696,11 @@ function StickyCTA() {
 
   useEffect(() => {
     const onScroll = () => {
-      setVisible(window.scrollY > window.innerHeight * 0.8);
+      // Erscheint früher — bei 30% gescrollt statt 80%
+      setVisible(window.scrollY > window.innerHeight * 0.3);
     };
     window.addEventListener('scroll', onScroll);
+    onScroll();
 
     const targets = ['final-cta', 'footer'].map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
     if (targets.length === 0) return () => window.removeEventListener('scroll', onScroll);
@@ -821,26 +724,56 @@ function StickyCTA() {
   const shown = visible && !shouldHide;
 
   return (
-    <div
-      className={`fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-40 transition-all duration-500 ${
-        shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
-      }`}
-    >
-      <Link
-        href="/register"
-        className="group inline-flex items-center gap-1.5 sm:gap-2.5 bg-white/85 backdrop-blur-xl text-zinc-900 font-medium px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-full shadow-[0_8px_30px_-8px_rgba(0,0,0,0.15)] border border-zinc-200/60 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all"
+    <>
+      {/* Desktop: schwebender Button rechts unten — wie vorher */}
+      <div
+        className={`hidden sm:block fixed bottom-5 right-5 z-40 transition-all duration-500 ${
+          shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
+        }`}
       >
-        <div className="flex -space-x-1.5 sm:-space-x-2">
-          <img src="/creators/creator-5.jpg" alt="" className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
-          <img src="/creators/creator-6.jpg" alt="" className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
-          <img src="/creators/creator-8.jpg" alt="" className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white object-cover" />
+        <Link
+          href="/register"
+          className="group inline-flex items-center gap-2.5 bg-brand-600 text-white font-semibold px-5 py-3 rounded-full shadow-[0_12px_40px_-8px_rgba(236,72,153,0.5)] hover:bg-brand-700 transition-all hover:scale-105"
+        >
+          <div className="flex -space-x-2">
+            <img src="/creators/creator-5.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+            <img src="/creators/creator-6.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+            <img src="/creators/creator-8.jpg" alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+          </div>
+          <span className="text-sm">Jetzt schreiben</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Mobile: BREITER STICKY-BUTTON am unteren Rand — viel größer, prominenter */}
+      <div
+        className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-500 ${
+          shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+        }`}
+      >
+        {/* Gradient-Hintergrund für Lesbarkeit */}
+        <div className="bg-gradient-to-t from-white via-white/95 to-transparent pt-6 pb-3 px-4">
+          <Link
+            href="/register"
+            className="group flex items-center justify-between gap-2 bg-brand-600 text-white font-semibold px-4 py-3.5 rounded-full shadow-[0_8px_32px_-8px_rgba(236,72,153,0.5)] hover:bg-brand-700 transition-all"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex -space-x-2">
+                <img src="/creators/creator-5.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+                <img src="/creators/creator-6.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+                <img src="/creators/creator-8.jpg" alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
+              </div>
+              <span className="text-sm font-semibold">Jetzt schreiben</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-1 transition-transform">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
         </div>
-        <span className="text-[11px] sm:text-sm">Schreiben</span>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform sm:w-3.5 sm:h-3.5">
-          <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </Link>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -932,13 +865,13 @@ function ExitIntent() {
 
 function CityMatchResult({ city }: { city: string }) {
   return (
-    <section id="nahe" className="py-8 sm:py-20 md:py-28 bg-gradient-to-b from-brand-50/40 to-white">
+    <section id="nahe" className="py-8 sm:py-20 bg-gradient-to-b from-brand-50/40 to-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center animate-fade-up">
         <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full bg-brand-600 text-white text-[10px] sm:text-sm font-medium mb-3 sm:mb-8">
           ✨ Treffer in {city}
         </div>
         <h2 className="font-display text-lg sm:text-4xl md:text-5xl font-semibold leading-tight mb-2 sm:mb-6">
-          <span className="text-brand-600">4 Frauen</span> in der Nähe von <span className="italic">{city}</span> warten <span className="italic text-brand-600">jetzt</span>
+          <span className="text-brand-600">4 Singles</span> in der Nähe von <span className="italic">{city}</span> warten <span className="italic text-brand-600">jetzt</span>
         </h2>
         <p className="text-xs sm:text-lg text-zinc-600 mb-5 sm:mb-10 leading-relaxed max-w-xl mx-auto">
           Registriere dich kostenlos und sieh, wer in deiner Nähe gerade da ist.
@@ -995,8 +928,7 @@ export default function HomePage() {
         <LiveStrip />
         <PremiumLocks />
         <ProfileShowcase />
-        <CoinPackages />
-        <FAQ />
+        <Testimonials />
         <FinalCTA />
       </main>
       <Footer />
