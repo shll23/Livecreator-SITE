@@ -380,7 +380,6 @@ type sendMessageRequest struct {
 
 func (s *Server) sendMessage(c *fiber.Ctx) error {
 	uid := currentUserID(c)
-	role, _ := c.Locals("role").(models.UserRole)
 	ctx := c.UserContext()
 
 	convID, err := uuid.Parse(c.Params("id"))
