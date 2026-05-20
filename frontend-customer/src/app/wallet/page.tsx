@@ -14,10 +14,11 @@ import {
 import AppHeader from '@/components/AppHeader';
 
 // ============================================================================
-// WALLET-PAGE — Schwarz/Weiß seriös, Standard-Sans-Zahlen, ohne Tier-Labels
+// WALLET-PAGE — Komplett Sans-Serif (Inter), keine Fraunces-Display-Font mehr
+// für maximal seriösen Bank-App-Look
 // ============================================================================
 
-const POPULAR_SORT_ORDER = 2; // 2. Paket = "Beliebt"
+const POPULAR_SORT_ORDER = 2;
 
 export default function WalletPage() {
   const router = useRouter();
@@ -65,9 +66,9 @@ export default function WalletPage() {
 
       <main className="min-h-screen bg-zinc-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 pb-8">
-          {/* ===== HEADLINE ===== */}
+          {/* ===== HEADLINE (Sans-Serif statt Display-Font) ===== */}
           <div className="mb-5 sm:mb-7">
-            <h1 className="font-display text-2xl sm:text-4xl font-semibold tracking-tight text-zinc-900 mb-1">
+            <h1 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-1">
               Dein Guthaben
             </h1>
             <p className="text-sm text-zinc-500">Coins sind die Währung für Nachrichten.</p>
@@ -83,7 +84,6 @@ export default function WalletPage() {
                   Aktuelles Guthaben
                 </div>
                 <div className="flex items-baseline gap-2">
-                  {/* WICHTIG: font-sans (Inter) statt font-display (Fraunces) für Zahlen */}
                   <span className="font-sans text-4xl sm:text-5xl font-bold text-white tabular-nums">
                     {loading ? '…' : balance ?? 0}
                   </span>
@@ -113,16 +113,15 @@ export default function WalletPage() {
             </div>
           </div>
 
-          {/* ===== ERROR ===== */}
           {error && (
             <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
               {error}
             </div>
           )}
 
-          {/* ===== HEADLINE PAKETE ===== */}
+          {/* ===== HEADLINE PAKETE (Sans-Serif) ===== */}
           <div className="mb-4">
-            <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 mb-1">
+            <h2 className="font-sans text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mb-1">
               Coins kaufen
             </h2>
             <p className="text-sm text-zinc-500">Einmalig zahlen. Kein Abo. Jederzeit verwendbar.</p>
@@ -158,7 +157,6 @@ export default function WalletPage() {
                     )}
 
                     <div className="p-5 sm:p-6">
-                      {/* Münze rechts oben, KEIN Tier-Label mehr */}
                       <div className="flex justify-end mb-2">
                         <svg width="22" height="22" viewBox="0 0 24 24">
                           <defs>
@@ -173,7 +171,6 @@ export default function WalletPage() {
                         </svg>
                       </div>
 
-                      {/* Coins-Zahl in Sans-Font (NICHT mehr font-display) */}
                       <div className="flex items-baseline gap-1.5 mb-3">
                         <span className="font-sans text-4xl sm:text-5xl font-bold text-zinc-900 tabular-nums tracking-tight">
                           {pkg.coins}
@@ -181,7 +178,6 @@ export default function WalletPage() {
                         <span className="text-sm text-zinc-500 font-medium">Coins</span>
                       </div>
 
-                      {/* Preis groß, KEIN ct/Coin Hinweis */}
                       <div className="mb-4">
                         <span className="font-sans text-xl font-semibold text-zinc-900">
                           {formatCents(pkg.price_cents, pkg.currency)}

@@ -39,8 +39,11 @@ const DEFAULT_FILTERS: FilterState = {
   useRadius: false,
 };
 
+const AGE_MIN_BOUND = 18;
+const AGE_MAX_BOUND = 99;
+
 // ============================================================================
-// FILTER BAR — Professionell S/W, Number-Inputs statt Slider
+// FILTER BAR — Professionell S/W, Number-Inputs mit funktionierender Lösch-Logik
 // ============================================================================
 function FilterBar({
   filters,
@@ -57,7 +60,14 @@ function FilterBar({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const cityRef = useRef<HTMLDivElement>(null);
 
+  // Lokale String-States für Alter-Inputs (erlauben leeren Wert während Tippen)
+  const [minAgeStr, setMinAgeStr] = useState(String(filters.minAge));
+  const [maxAgeStr, setMaxAgeStr] = useState(String(filters.maxAge));
+
+  // Sync wenn von außen (z.B. Reset) geändert
   useEffect(() => { setCityInput(filters.city); }, [filters.city]);
+  useEffect(() => { setMinAgeStr(String(filters.minAge)); }, [filters.minAge]);
+  useEffect(() => { setMaxAgeStr(String(filters.maxAge)); }, [filters.maxAge]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -82,14 +92,41 @@ function FilterBar({
     onChange({ ...filters, city: '', cityEntry: null, useRadius: false });
   }
 
-  // Number-Input Handler (mit Clamping)
-  function setMinAge(v: number) {
-    const clamped = Math.max(18, Math.min(99, v || 18));
-    onChange({ ...filters, minAge: Math.min(clamped, filters.maxAge) });
+  // ============= Alter-Input Handler =============
+  // Während Tippen: NUR den String-State updaten (auch leer erlauben)
+  function handleMinAgeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // Nur Ziffern erlauben, max 2 Stellen
+    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setMinAgeStr(v);
   }
-  function setMaxAge(v: number) {
-    const clamped = Math.max(18, Math.min(99, v || 99));
-    onChange({ ...filters, maxAge: Math.max(clamped, filters.minAge) });
+  function handleMaxAgeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setMaxAgeStr(v);
+  }
+
+  // Beim Verlassen: Wert validieren und auf Filter anwenden
+  function handleMinAgeBlur() {
+    let n = parseInt(minAgeStr, 10);
+    if (isNaN(n)) n = AGE_MIN_BOUND;
+    n = Math.max(AGE_MIN_BOUND, Math.min(AGE_MAX_BOUND, n));
+    if (n > filters.maxAge) n = filters.maxAge;
+    setMinAgeStr(String(n));
+    onChange({ ...filters, minAge: n });
+  }
+  function handleMaxAgeBlur() {
+    let n = parseInt(maxAgeStr, 10);
+    if (isNaN(n)) n = AGE_MAX_BOUND;
+    n = Math.max(AGE_MIN_BOUND, Math.min(AGE_MAX_BOUND, n));
+    if (n < filters.minAge) n = filters.minAge;
+    setMaxAgeStr(String(n));
+    onChange({ ...filters, maxAge: n });
+  }
+
+  // Enter-Taste = Blur erzwingen
+  function handleAgeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
   }
 
   const hasActiveFilters = filters.city !== '' || filters.minAge !== 18 || filters.maxAge !== 50;
@@ -145,7 +182,6 @@ function FilterBar({
             </div>
           )}
 
-          {/* Umkreis-Toggle (nur wenn Stadt mit Koordinaten gewählt) */}
           {filters.cityEntry && (
             <div className="mt-2 flex items-center gap-2 text-xs">
               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -174,28 +210,38 @@ function FilterBar({
           )}
         </div>
 
-        {/* ============== ALTER — Number Inputs ============== */}
+        {/* ============== ALTER — Number Inputs (FIXED) ============== */}
         <div>
           <label className="block text-[10px] uppercase tracking-[0.15em] text-zinc-700 font-semibold mb-1.5">
             Alter
           </label>
           <div className="flex items-center gap-2">
             <input
-              type="number"
-              min={18}
-              max={99}
-              value={filters.minAge}
-              onChange={(e) => setMinAge(parseInt(e.target.value))}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={minAgeStr}
+              onChange={handleMinAgeChange}
+              onBlur={handleMinAgeBlur}
+              onKeyDown={handleAgeKeyDown}
+              onFocus={(e) => e.currentTarget.select()}
+              maxLength={2}
+              placeholder="18"
               className="w-16 sm:w-20 px-2.5 py-2.5 text-sm text-center bg-white border border-zinc-300 rounded-lg focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none transition-all tabular-nums font-medium"
               aria-label="Mindestalter"
             />
             <span className="text-zinc-400 text-xs">bis</span>
             <input
-              type="number"
-              min={18}
-              max={99}
-              value={filters.maxAge}
-              onChange={(e) => setMaxAge(parseInt(e.target.value))}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={maxAgeStr}
+              onChange={handleMaxAgeChange}
+              onBlur={handleMaxAgeBlur}
+              onKeyDown={handleAgeKeyDown}
+              onFocus={(e) => e.currentTarget.select()}
+              maxLength={2}
+              placeholder="99"
               className="w-16 sm:w-20 px-2.5 py-2.5 text-sm text-center bg-white border border-zinc-300 rounded-lg focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none transition-all tabular-nums font-medium"
               aria-label="Höchstalter"
             />
@@ -204,7 +250,6 @@ function FilterBar({
         </div>
       </div>
 
-      {/* ============== FOOTER ============== */}
       <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
         <span className="text-zinc-600">
           <span className="font-semibold text-zinc-900 tabular-nums">{resultCount}</span> {resultCount === 1 ? 'Treffer' : 'Treffer'}
