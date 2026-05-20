@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"os"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -174,8 +175,8 @@ a{display:inline-block;background:#ec4899;color:white;padding:12px 24px;border-r
 <h1>✨ Zahlung erfolgreich</h1>
 <p>Deine Coins wurden gutgeschrieben.</p>
 <div class="coins">%s</div>
-<a href="http://localhost:3000/wallet">Zurück zum Wallet</a>
-</div></body></html>`, "✓")
+<a href="%s/wallet">Zurück zum Wallet</a>
+</div></body></html>`, "✓", os.Getenv("PUBLIC_FRONTEND_URL"))
 
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(html)

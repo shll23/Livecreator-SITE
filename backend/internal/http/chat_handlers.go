@@ -456,7 +456,7 @@ func (s *Server) sendMessage(c *fiber.Ctx) error {
 		// (Plattform-Cut nehmen wir später beim Auszahlen, nicht hier)
 		txID, err := s.wallet.RecordTransaction(
 			ctx,
-			"message_fee",
+			"message_send",
 			"", // Kein Idempotency-Key — jeder Send ist eindeutig
 			[]wallet.Entry{
 				{

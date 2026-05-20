@@ -61,7 +61,8 @@ func main() {
 	switch cfg.PaymentProvider {
 	case "mock", "":
 		// Bei Mock zeigt die Confirm-URL auf das Backend selbst
-		backendURL := "http://localhost:" + cfg.AppPort
+		backendURL := os.Getenv("PUBLIC_BACKEND_URL")
+		if backendURL == "" { backendURL = "http://localhost:" + cfg.AppPort }
 		paymentProvider = payment.NewMockProvider(backendURL)
 	default:
 		log.Fatalf("Unbekannter Payment-Provider: %s", cfg.PaymentProvider)
