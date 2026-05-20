@@ -4,21 +4,15 @@
 
 /* ============================================================================
    GLOBALE STABILITÄTS-FIXES
-   - Kein horizontales Scrollen
-   - Kein Zoom
-   - Safe-Area für iPhone Notch + Home-Indicator
-   - Native App-Anmutung
    ============================================================================ */
 
 @layer base {
   :root {
     --font-sans: var(--font-inter), system-ui, sans-serif;
     --font-display: var(--font-fraunces), Georgia, serif;
-    /* Visual viewport height — wird per JS aktualisiert wenn nötig (für iOS Keyboard) */
     --vvh: 100vh;
   }
 
-  /* Box-Sizing für ALLE Elemente — verhindert Breiten-Sprünge */
   *,
   *::before,
   *::after {
@@ -29,35 +23,28 @@
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* Kein horizontales Scrollen */
     overflow-x: hidden;
     width: 100%;
     max-width: 100%;
-    /* Kein Tap-Highlight-Flash auf iOS */
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
     background: #fefefe;
     color: #18181b;
-    /* Kein horizontales Scrollen */
     overflow-x: hidden;
     width: 100%;
     max-width: 100%;
-    /* Verhindert Pull-to-Refresh im App-Modus */
     overscroll-behavior-y: none;
-    /* Mobile Padding-Bottom für die Tab Bar (h-16 = 64px) + Safe-Area */
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Desktop: kein Tab-Bar-Padding nötig */
   @media (min-width: 1024px) {
     body {
       padding-bottom: 0;
     }
   }
 
-  /* Interaktive Elemente — Double-Tap-Zoom verhindern */
   button,
   a,
   input,
@@ -66,7 +53,7 @@
     touch-action: manipulation;
   }
 
-  /* iOS: Verhindere ungewollten Zoom bei Input-Focus (Font-Size >= 16px) */
+  /* iOS Auto-Zoom verhindern bei Input-Focus (Font-Size >= 16px) */
   input[type='text'],
   input[type='email'],
   input[type='password'],
@@ -79,7 +66,6 @@
     font-size: 16px;
   }
 
-  /* Auf Desktop können wir Text wieder normal lassen */
   @media (min-width: 1024px) {
     input[type='text'],
     input[type='email'],
@@ -94,7 +80,6 @@
     }
   }
 
-  /* Bilder dürfen nie aus dem Container ragen */
   img, video, canvas, svg {
     max-width: 100%;
     height: auto;
@@ -109,7 +94,6 @@
     font-family: var(--font-sans);
   }
 
-  /* Safe-Area Utilities */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -117,31 +101,48 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Echte Höhe auf Mobile (dvh = dynamic viewport height) */
   .h-dvh {
-    height: 100vh; /* Fallback */
+    height: 100vh;
     height: 100dvh;
   }
   .min-h-dvh {
-    min-height: 100vh; /* Fallback */
+    min-height: 100vh;
     min-height: 100dvh;
   }
 
-  /* CSS Snap-Scroll für Bilder-Galerie */
+  /* =========================================================================
+     BILDER-GALERIE — NUR HORIZONTAL WISCHEN ERLAUBT
+     - touch-action:pan-x → nur horizontale Touch-Gesten erlauben
+     - vertikale Gesten gehen an die Seite (normales Scrollen)
+     - overscroll-behavior verhindert Bounce-Effekte
+     ========================================================================= */
   .snap-x-gallery {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+    /* WICHTIG: nur horizontal wischen — verhindert vertikales Wackeln */
+    touch-action: pan-x;
+    /* Browser-Hint dass die Element-Position sich ändert */
+    will-change: scroll-position;
   }
   .snap-x-gallery::-webkit-scrollbar {
     display: none;
   }
   .snap-center {
     scroll-snap-align: center;
+    /* Verhindert dass Kinder-Elemente die touch-action des Parents überschreiben */
+    touch-action: pan-x;
+  }
+  .snap-center img {
+    /* Bilder dürfen nicht via Touch verschoben/gezoomt werden */
+    touch-action: pan-x;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 
-  /* Slide-Up Animation für Bottom-Sheet */
   @keyframes fade-up {
     from {
       opacity: 0;
@@ -156,7 +157,6 @@
     animation: fade-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Sanfte Brand-Schatten */
   .shadow-pink {
     box-shadow: 0 4px 14px -4px rgba(236, 72, 153, 0.18);
   }
@@ -164,12 +164,10 @@
     box-shadow: 0 12px 28px -10px rgba(236, 72, 153, 0.35);
   }
 
-  /* Soft-Background Gradient */
   .bg-soft-gradient {
     background: linear-gradient(180deg, #fdf2f8 0%, #fef9fb 35%, #ffffff 100%);
   }
 
-  /* Tap-Feedback (für Vorschlag-Buttons) */
   .tap-shrink {
     transition: transform 0.1s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out;
   }

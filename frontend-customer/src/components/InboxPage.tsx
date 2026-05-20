@@ -21,14 +21,13 @@ import {
 import CoinIcon from '@/components/CoinIcon';
 
 // ============================================================================
-// InboxPage — Premium-Mobile-Chat
+// InboxPage v4
 //
-// Ziele:
-//  - Native App-Anmutung
-//  - Chat-Start bleibt UNTEN (kein künstlich nach oben gezogen)
-//  - Input-Bar stabil fixed mit Safe-Area
-//  - Keine Preis/Guthaben-Leiste mehr unten
-//  - Saubere Cross-Browser-Stabilität
+// Wichtige Änderungen:
+//  - Chat-Header IMMER sichtbar (Avatar groß, Name, Online, Profil-Link)
+//  - Tap auf Avatar/Name → /profil/[handle]
+//  - Mobile Tab Bar bleibt sichtbar (verstecken war ein Bug)
+//  - Korrektes Padding für Tab Bar im Chat-Bereich
 // ============================================================================
 
 interface InboxPageProps {
@@ -64,7 +63,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  // Redirect wenn nicht eingeloggt
   useEffect(() => {
     if (!getAccessToken()) {
       router.push('/login');
@@ -128,7 +126,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }, [activeId, loadChat]);
 
-  // Polling für neue Nachrichten
+  // Polling
   useEffect(() => {
     const interval = setInterval(() => {
       loadInbox();
@@ -146,12 +144,10 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     return () => clearInterval(interval);
   }, [activeId, loadInbox]);
 
-  // Scroll-to-bottom bei neuen Nachrichten
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // URL-Sync
   useEffect(() => {
     if (initialConversationId && initialConversationId !== activeId) {
       setActiveId(initialConversationId);
@@ -172,7 +168,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   }
 
   // ===========================================================================
-  // SEND MESSAGE (Optimistic UI)
+  // SEND
   // ===========================================================================
   async function handleSend(e: React.FormEvent | null, customText?: string) {
     if (e) e.preventDefault();
@@ -232,9 +228,11 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   // ===========================================================================
   return (
     <div className="flex flex-col h-dvh bg-white lg:bg-zinc-50">
-      {/* =======================================================
-          MOBILE HEADER (nur sichtbar Mobile, nicht im Chat-Vollbild)
-          ======================================================= */}
+      {/* =================================================================
+          HEADER — sichtbar wenn:
+            - Desktop immer
+            - Mobile: nur in Liste (im Chat-Vollbild ist der Chat-Header oben)
+          ================================================================= */}
       {!isChatActive && (
         <header className="lg:hidden shrink-0 bg-white border-b border-zinc-100 px-4 py-2.5 flex items-center justify-between">
           <Link href="/explore" className="inline-flex items-center gap-1.5">
@@ -246,7 +244,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
             </span>
           </Link>
 
-          {/* Dezente Coin-Pille rechts */}
           <Link
             href="/wallet"
             className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200/70 bg-white hover:bg-amber-50/40 transition-colors"
@@ -260,9 +257,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
         </header>
       )}
 
-      {/* =======================================================
+      {/* =================================================================
           BODY: Liste + Chat
-          ======================================================= */}
+          ================================================================= */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto overflow-hidden">
         {/* === LISTE === */}
         <aside
@@ -369,35 +366,61 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
           ) : activeDetail ? (
             <>
               {/* =================================================
-                  CHAT-HEADER (clean, dezent)
+                  CHAT-HEADER — IMMER sichtbar mit Avatar + Name + Profil-Link
                   ================================================= */}
-              <div className="shrink-0 px-3 sm:px-5 py-2 bg-white border-b border-zinc-200 flex items-center gap-2.5">
+              <div className="shrink-0 px-3 sm:px-5 py-2.5 bg-white border-b border-zinc-200 flex items-center gap-3">
                 <button
                   onClick={backToList}
-                  className="lg:hidden p-1.5 -ml-1 hover:bg-zinc-100 active:bg-zinc-200 rounded-full transition-colors"
+                  className="lg:hidden p-1.5 -ml-1 hover:bg-zinc-100 active:bg-zinc-200 rounded-full transition-colors shrink-0"
                   aria-label="Zurück"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
                 </button>
 
-                <div className="relative shrink-0">
-                  {activeDetail.peer_avatar ? (
-                    <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-9 h-9 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-zinc-200" />
-                  )}
-                  <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 border-2 border-white" />
-                </div>
+                {/* Avatar + Name = LINK zum Profil */}
+                {activeDetail.peer_handle ? (
+                  <Link
+                    href={`/profil/${activeDetail.peer_handle}`}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 hover:bg-zinc-50 active:bg-zinc-100 rounded-lg px-1.5 py-1 -mx-1.5 -my-1 transition-colors"
+                  >
+                    <div className="relative shrink-0">
+                      {activeDetail.peer_avatar ? (
+                        <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-zinc-200" />
+                      )}
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-[15px] truncate text-zinc-900 leading-tight">
+                        {activeDetail.peer_name}
+                      </div>
+                      <div className="text-[11px] text-green-600 font-medium">Online</div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="relative shrink-0">
+                      {activeDetail.peer_avatar ? (
+                        <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-zinc-200" />
+                      )}
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-[15px] truncate text-zinc-900 leading-tight">
+                        {activeDetail.peer_name}
+                      </div>
+                      <div className="text-[11px] text-green-600 font-medium">Online</div>
+                    </div>
+                  </div>
+                )}
 
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate text-zinc-900">{activeDetail.peer_name}</div>
-                  <div className="text-[10px] text-green-600 font-medium">Online</div>
-                </div>
-
-                {/* Dezente Coin-Pille rechts */}
+                {/* Coin-Pille rechts */}
                 <Link
                   href="/wallet"
                   className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200/70 bg-white hover:bg-amber-50/40 transition-colors shrink-0"
@@ -412,12 +435,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
               {/* =================================================
                   CHAT-INHALT
-                  WICHTIG: Bei leerem Chat → Empty-State UNTEN
-                  Bei Nachrichten → normal scrollen
                   ================================================= */}
               <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
                 {messages.length === 0 ? (
-                  // EMPTY STATE — Container füllt den Raum, Inhalt UNTEN
                   <div className="min-h-full flex flex-col justify-end px-5 pb-5 pt-8">
                     <div className="flex flex-col items-center text-center">
                       <div className="relative mb-3">
@@ -439,7 +459,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                         Sag kurz Hallo oder stelle {activeDetail.peer_name} eine persönliche Frage.
                       </p>
 
-                      {/* Vorschlag-Buttons — elegant, flach */}
                       <div className="flex flex-col gap-1.5 w-full max-w-[280px]">
                         {SUGGESTIONS.map((s, i) => (
                           <button
@@ -496,10 +515,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               </div>
 
               {/* =================================================
-                  INPUT-BAR — fixed unten, sauber
-                  - Safe-Area beachtet
-                  - Nur Input + Send-Button
-                  - KEINE Preis/Guthaben-Infos mehr
+                  INPUT-BAR — Safe-Area
                   ================================================= */}
               <div
                 className="shrink-0 bg-white border-t border-zinc-200"
