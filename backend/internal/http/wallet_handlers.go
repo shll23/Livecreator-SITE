@@ -159,24 +159,76 @@ func (s *Server) mockConfirmPurchase(c *fiber.Ctx) error {
 		return errInternal(c, err)
 	}
 
-	// HTML-Antwort mit Auto-Close für Mock-Flow
+	frontendURL := os.Getenv("PUBLIC_FRONTEND_URL")
+
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html lang="de">
-<head><meta charset="utf-8"><title>Zahlung erfolgreich</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Zahlung bestätigt</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:linear-gradient(135deg,#fdf2f8,#fce7f3);color:#1f2937}
-.box{background:white;padding:48px;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.1);text-align:center;max-width:420px}
-h1{margin:0 0 8px;font-size:28px;color:#be185d}
-p{margin:0 0 24px;color:#6b7280}
-.coins{font-size:48px;font-weight:bold;color:#ec4899;margin:16px 0}
-a{display:inline-block;background:#ec4899;color:white;padding:12px 24px;border-radius:9999px;text-decoration:none;font-weight:600}
-</style></head>
-<body><div class="box">
-<h1>✨ Zahlung erfolgreich</h1>
-<p>Deine Coins wurden gutgeschrieben.</p>
-<div class="coins">%s</div>
-<a href="%s/wallet">Zurück zum Wallet</a>
-</div></body></html>`, "✓", os.Getenv("PUBLIC_FRONTEND_URL"))
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;background:#ffffff;color:#18181b;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%%;min-height:100vh;min-height:100dvh;overflow-x:hidden}
+.wrap{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px}
+.card{width:100%%;max-width:440px;background:#ffffff;border:1px solid #e4e4e7;border-radius:16px;padding:32px 28px;text-align:center}
+.check{width:56px;height:56px;margin:0 auto 20px;border-radius:50%%;background:#f0fdf4;display:flex;align-items:center;justify-content:center}
+.check svg{color:#16a34a}
+h1{margin:0 0 8px 0;font-size:22px;font-weight:700;letter-spacing:-0.01em;color:#18181b}
+p.sub{margin:0 0 24px 0;font-size:14px;color:#71717a;line-height:1.5}
+a.btn{display:block;width:100%%;background:#18181b;color:#ffffff;text-decoration:none;padding:13px 20px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:0.01em;transition:background-color 0.15s ease}
+a.btn:hover{background:#27272a}
+a.btn:active{background:#000000}
+.trust{margin-top:24px;padding-top:20px;border-top:1px solid #e4e4e7;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.trust-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#52525b;text-align:left}
+.trust-item svg{flex-shrink:0;color:#16a34a}
+.meta{margin-top:20px;font-size:11px;color:#a1a1aa;line-height:1.5;word-break:break-all}
+@media (min-width:480px){.card{padding:40px 36px}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<div class="check">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<h1>Zahlung bestätigt</h1>
+<p class="sub">Dein Guthaben wurde aufgeladen und steht dir sofort zur Verfügung.</p>
+<a href="%s/wallet" class="btn">Zurück zum Konto</a>
+<div class="trust">
+<div class="trust-item">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="11" width="18" height="11" rx="2"></rect>
+<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+</svg>
+<span>SSL-verschlüsselt</span>
+</div>
+<div class="trust-item">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+</svg>
+<span>Neutrale Abrechnung</span>
+</div>
+<div class="trust-item">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+<span>PCI DSS zertifiziert</span>
+</div>
+<div class="trust-item">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+<span>Einmalig · Kein Abo</span>
+</div>
+</div>
+<div class="meta">Transaktion-ID: %s</div>
+</div>
+</div>
+</body>
+</html>`, frontendURL, purchaseID.String())
 
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(html)
