@@ -289,8 +289,9 @@ func buildSeedData() []CreatorSeed {
 func upsertCreator(ctx context.Context, pool *pgxpool.Pool, c CreatorSeed) error {
 	// 1) Vor-Check: Existiert der User? (Außerhalb jeder Transaktion damit ein
 	//    "no rows" Fehler nicht den ganzen TX-Block ungültig macht)
+	// users.email ist citext (case-insensitive), kein separates email_norm nötig.
 	var userID string
-	err := pool.QueryRow(ctx, `SELECT id FROM users WHERE email_norm = LOWER($1)`, c.Email).Scan(&userID)
+	err := pool.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, c.Email).Scan(&userID)
 
 	// pgx liefert pgx.ErrNoRows bei nicht-vorhandenem Datensatz
 	userExists := err == nil
@@ -319,8 +320,8 @@ func upsertCreator(ctx context.Context, pool *pgxpool.Pool, c CreatorSeed) error
 	if !userExists {
 		// User neu anlegen
 		err = tx.QueryRow(ctx, `
-			INSERT INTO users (email, email_norm, password_hash, role, status)
-			VALUES ($1, LOWER($1), $2, 'creator', 'active')
+			INSERT INTO users (email, password_hash, role, status)
+			VALUES ($1, $2, 'creator', 'active')
 			RETURNING id
 		`, c.Email, string(hash)).Scan(&userID)
 		if err != nil {
