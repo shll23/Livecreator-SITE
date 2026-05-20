@@ -14,16 +14,10 @@ import {
 import AppHeader from '@/components/AppHeader';
 
 // ============================================================================
-// WALLET-PAGE — Schwarz/Weiß seriöses Design für zahlende Kunden
-//
-// Hierarchie:
-//   1. Guthaben-Karte oben (anthrazit, gold-akzent)
-//   2. Coin-Pakete (4 Karten, "Beliebt"-Marker auf Paket 2)
-//   3. Trust-Sektion mit Anonym/PCI DSS/Sichere Zahlung
-//   4. Footer mit Sicherheits-Erklärung
+// WALLET-PAGE — Schwarz/Weiß seriös, Standard-Sans-Zahlen, ohne Tier-Labels
 // ============================================================================
 
-const POPULAR_SORT_ORDER = 2; // Paket mit sort_order=2 wird als "Beliebt" markiert
+const POPULAR_SORT_ORDER = 2; // 2. Paket = "Beliebt"
 
 export default function WalletPage() {
   const router = useRouter();
@@ -79,9 +73,8 @@ export default function WalletPage() {
             <p className="text-sm text-zinc-500">Coins sind die Währung für Nachrichten.</p>
           </div>
 
-          {/* ===== GUTHABEN-KARTE (anthrazit, Gold-Akzent) ===== */}
+          {/* ===== GUTHABEN-KARTE ===== */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 p-5 sm:p-7 mb-6 sm:mb-8 shadow-lg">
-            {/* Subtiler Gold-Glanz oben rechts */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-400/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative flex items-center justify-between gap-4">
@@ -90,14 +83,14 @@ export default function WalletPage() {
                   Aktuelles Guthaben
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display text-4xl sm:text-5xl font-semibold text-white tabular-nums">
+                  {/* WICHTIG: font-sans (Inter) statt font-display (Fraunces) für Zahlen */}
+                  <span className="font-sans text-4xl sm:text-5xl font-bold text-white tabular-nums">
                     {loading ? '…' : balance ?? 0}
                   </span>
                   <span className="text-base text-zinc-400 font-medium">Coins</span>
                 </div>
               </div>
 
-              {/* Goldene Münze groß */}
               <div className="shrink-0">
                 <svg width="64" height="64" viewBox="0 0 24 24" className="drop-shadow-lg">
                   <defs>
@@ -145,9 +138,7 @@ export default function WalletPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
               {packages.map((pkg, idx) => {
-                // sort_order kommt vom Backend; wir nehmen den Index als Fallback
                 const isPopular = (idx + 1) === POPULAR_SORT_ORDER;
-                const pricePerCoin = pkg.price_cents / pkg.coins / 100;
 
                 return (
                   <div
@@ -167,11 +158,9 @@ export default function WalletPage() {
                     )}
 
                     <div className="p-5 sm:p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">
-                          {pkg.name}
-                        </span>
-                        <svg width="20" height="20" viewBox="0 0 24 24">
+                      {/* Münze rechts oben, KEIN Tier-Label mehr */}
+                      <div className="flex justify-end mb-2">
+                        <svg width="22" height="22" viewBox="0 0 24 24">
                           <defs>
                             <linearGradient id={`coin-${pkg.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
                               <stop offset="0%" stopColor="#FFE082" />
@@ -184,19 +173,18 @@ export default function WalletPage() {
                         </svg>
                       </div>
 
-                      <div className="flex items-baseline gap-1.5 mb-2">
-                        <span className="font-display text-3xl sm:text-4xl font-semibold text-zinc-900 tabular-nums">
+                      {/* Coins-Zahl in Sans-Font (NICHT mehr font-display) */}
+                      <div className="flex items-baseline gap-1.5 mb-3">
+                        <span className="font-sans text-4xl sm:text-5xl font-bold text-zinc-900 tabular-nums tracking-tight">
                           {pkg.coins}
                         </span>
                         <span className="text-sm text-zinc-500 font-medium">Coins</span>
                       </div>
 
-                      <div className="flex items-baseline justify-between mb-4">
-                        <span className="text-lg font-semibold text-zinc-900">
+                      {/* Preis groß, KEIN ct/Coin Hinweis */}
+                      <div className="mb-4">
+                        <span className="font-sans text-xl font-semibold text-zinc-900">
                           {formatCents(pkg.price_cents, pkg.currency)}
-                        </span>
-                        <span className="text-[11px] text-zinc-400 tabular-nums">
-                          {(pricePerCoin * 100).toFixed(1)} ct/Coin
                         </span>
                       </div>
 
@@ -291,7 +279,6 @@ export default function WalletPage() {
             </div>
           </div>
 
-          {/* ===== KLEINGEDRUCKTES ===== */}
           <p className="text-[11px] text-zinc-400 text-center leading-relaxed px-4">
             Mit deinem Kauf akzeptierst du unsere <Link href="/agb" className="underline hover:text-zinc-600">AGB</Link>.
             Coins sind nicht erstattbar und nicht in echtes Geld umtauschbar.

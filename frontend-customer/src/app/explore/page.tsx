@@ -19,7 +19,7 @@ function Logo() {
 }
 
 // ============================================================================
-// FILTER BAR
+// FILTER STATE
 // ============================================================================
 interface FilterState {
   city: string;
@@ -39,6 +39,9 @@ const DEFAULT_FILTERS: FilterState = {
   useRadius: false,
 };
 
+// ============================================================================
+// FILTER BAR — Professionell S/W, Number-Inputs statt Slider
+// ============================================================================
 function FilterBar({
   filters,
   onChange,
@@ -79,14 +82,24 @@ function FilterBar({
     onChange({ ...filters, city: '', cityEntry: null, useRadius: false });
   }
 
+  // Number-Input Handler (mit Clamping)
+  function setMinAge(v: number) {
+    const clamped = Math.max(18, Math.min(99, v || 18));
+    onChange({ ...filters, minAge: Math.min(clamped, filters.maxAge) });
+  }
+  function setMaxAge(v: number) {
+    const clamped = Math.max(18, Math.min(99, v || 99));
+    onChange({ ...filters, maxAge: Math.max(clamped, filters.minAge) });
+  }
+
   const hasActiveFilters = filters.city !== '' || filters.minAge !== 18 || filters.maxAge !== 50;
 
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-3 sm:p-4 mb-5 sm:mb-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        {/* STADT mit Autocomplete */}
+    <div className="bg-white rounded-xl border border-zinc-300 p-3 sm:p-4 mb-5 sm:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:gap-4 sm:items-end">
+        {/* ============== STADT ============== */}
         <div ref={cityRef} className="relative">
-          <label className="block text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-zinc-700 font-semibold mb-1.5">
             Stadt
           </label>
           <div className="relative">
@@ -101,45 +114,55 @@ function FilterBar({
                 }
               }}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="z.B. Berlin"
-              className="w-full pl-8 pr-8 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:bg-white focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition-all"
+              placeholder="Alle Städte"
+              className="w-full pl-9 pr-9 py-2.5 text-sm bg-white border border-zinc-300 rounded-lg focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none transition-all"
             />
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
             {cityInput && (
-              <button onClick={clearCity} type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 p-0.5" aria-label="Stadt löschen">
+              <button onClick={clearCity} type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 p-1" aria-label="Stadt löschen">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               </button>
             )}
           </div>
 
           {showSuggestions && (
-            <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-zinc-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-zinc-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {suggestions.length === 0 ? (
-                <button type="button" onClick={() => { onChange({ ...filters, city: cityInput, cityEntry: null }); setShowSuggestions(false); }} className="w-full text-left px-3 py-2 text-sm text-zinc-600 hover:bg-brand-50">
+                <button type="button" onClick={() => { onChange({ ...filters, city: cityInput, cityEntry: null }); setShowSuggestions(false); }} className="w-full text-left px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50">
                   <span className="text-zinc-500">„{cityInput}" verwenden</span>
                 </button>
               ) : (
                 suggestions.map((c) => (
-                  <button key={c.name} type="button" onClick={() => selectCity(c)} className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 flex items-center justify-between">
+                  <button key={c.name} type="button" onClick={() => selectCity(c)} className="w-full text-left px-3 py-2 text-sm text-zinc-800 hover:bg-zinc-50 flex items-center justify-between">
                     <span>{c.name}</span>
-                    <span className="text-[10px] text-zinc-400">{c.country}</span>
+                    <span className="text-[10px] text-zinc-400 font-medium">{c.country}</span>
                   </button>
                 ))
               )}
             </div>
           )}
 
+          {/* Umkreis-Toggle (nur wenn Stadt mit Koordinaten gewählt) */}
           {filters.cityEntry && (
             <div className="mt-2 flex items-center gap-2 text-xs">
               <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" checked={filters.useRadius} onChange={(e) => onChange({ ...filters, useRadius: e.target.checked })} className="rounded border-zinc-300 text-brand-600 focus:ring-brand-500 w-3.5 h-3.5" />
-                <span className="text-zinc-600">Umkreis</span>
+                <input
+                  type="checkbox"
+                  checked={filters.useRadius}
+                  onChange={(e) => onChange({ ...filters, useRadius: e.target.checked })}
+                  className="rounded border-zinc-400 text-zinc-900 focus:ring-zinc-900 w-3.5 h-3.5"
+                />
+                <span className="text-zinc-700">Umkreis</span>
               </label>
               {filters.useRadius && (
-                <select value={filters.radiusKm} onChange={(e) => onChange({ ...filters, radiusKm: parseInt(e.target.value) })} className="text-xs bg-zinc-50 border border-zinc-200 rounded px-1.5 py-0.5 focus:outline-none focus:border-brand-400">
+                <select
+                  value={filters.radiusKm}
+                  onChange={(e) => onChange({ ...filters, radiusKm: parseInt(e.target.value) })}
+                  className="text-xs bg-white border border-zinc-300 rounded px-2 py-1 focus:outline-none focus:border-zinc-900"
+                >
                   <option value="25">25 km</option>
                   <option value="50">50 km</option>
                   <option value="100">100 km</option>
@@ -151,25 +174,46 @@ function FilterBar({
           )}
         </div>
 
-        {/* ALTER */}
-        <div className="sm:col-span-2">
-          <label className="block text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-            Alter <span className="text-zinc-400 font-normal normal-case">({filters.minAge}–{filters.maxAge} Jahre)</span>
+        {/* ============== ALTER — Number Inputs ============== */}
+        <div>
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-zinc-700 font-semibold mb-1.5">
+            Alter
           </label>
-          <div className="flex items-center gap-3 pt-1.5">
-            <input type="range" min={18} max={60} value={filters.minAge} onChange={(e) => { const v = parseInt(e.target.value); onChange({ ...filters, minAge: Math.min(v, filters.maxAge) }); }} className="flex-1 accent-brand-600" />
-            <span className="text-xs text-zinc-400">bis</span>
-            <input type="range" min={18} max={60} value={filters.maxAge} onChange={(e) => { const v = parseInt(e.target.value); onChange({ ...filters, maxAge: Math.max(v, filters.minAge) }); }} className="flex-1 accent-brand-600" />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={18}
+              max={99}
+              value={filters.minAge}
+              onChange={(e) => setMinAge(parseInt(e.target.value))}
+              className="w-16 sm:w-20 px-2.5 py-2.5 text-sm text-center bg-white border border-zinc-300 rounded-lg focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none transition-all tabular-nums font-medium"
+              aria-label="Mindestalter"
+            />
+            <span className="text-zinc-400 text-xs">bis</span>
+            <input
+              type="number"
+              min={18}
+              max={99}
+              value={filters.maxAge}
+              onChange={(e) => setMaxAge(parseInt(e.target.value))}
+              className="w-16 sm:w-20 px-2.5 py-2.5 text-sm text-center bg-white border border-zinc-300 rounded-lg focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none transition-all tabular-nums font-medium"
+              aria-label="Höchstalter"
+            />
+            <span className="text-zinc-500 text-xs ml-1">Jahre</span>
           </div>
         </div>
       </div>
 
+      {/* ============== FOOTER ============== */}
       <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-        <span className="text-zinc-500">
-          <span className="font-semibold text-zinc-900">{resultCount}</span> {resultCount === 1 ? 'Treffer' : 'Treffer'}
+        <span className="text-zinc-600">
+          <span className="font-semibold text-zinc-900 tabular-nums">{resultCount}</span> {resultCount === 1 ? 'Treffer' : 'Treffer'}
         </span>
         {hasActiveFilters && (
-          <button onClick={onReset} className="text-brand-600 hover:text-brand-700 font-medium">
+          <button
+            onClick={onReset}
+            className="text-zinc-700 hover:text-zinc-900 font-medium underline underline-offset-2"
+          >
             Filter zurücksetzen
           </button>
         )}
@@ -307,7 +351,6 @@ export default function ExplorePage() {
                         </div>
                       )}
 
-                      {/* Bild-Galerie-Indikator (zeigt wieviele Bilder) */}
                       {photoCount > 1 && (
                         <div className="absolute top-2 right-2 z-[1]" style={{ marginTop: f.distance_km != null ? '22px' : '0' }}>
                           <span className="flex items-center gap-1 bg-black/40 backdrop-blur text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full">
