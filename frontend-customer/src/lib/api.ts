@@ -187,6 +187,24 @@ export async function startPurchase(packageId: string): Promise<PurchaseResponse
 
 // === Creators (Public) ===
 
+export interface ProfileData {
+  height_cm?: number;
+  figure?: string;
+  hair_color?: string;
+  hair_length?: string;
+  eye_color?: string;
+  zodiac?: string;
+  smoker?: string;
+  marital_status?: string;
+  tattoos?: string;
+  piercings?: string;
+  looking_for?: string[];
+  turn_ons?: string[];
+  interests?: string[];
+  about_text?: string;
+  [key: string]: any;
+}
+
 export interface Creator {
   user_id: string;
   handle: string;
@@ -199,6 +217,8 @@ export interface Creator {
   age: number | null;
   city: string | null;
   country: string | null;
+  gallery_urls: string[];
+  profile_data: ProfileData;
   distance_km?: number;
 }
 

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,17 +18,12 @@ import (
 //   city         exakte Stadt-Übereinstimmung, z.B. "Berlin"
 //   min_age      Mindestalter (inkl.), z.B. 25
 //   max_age      Höchstalter (inkl.), z.B. 35
-//   near_lat     Breitengrad für Umkreis-Suche (zusammen mit near_lng + radius_km)
+//   near_lat     Breitengrad für Umkreis-Suche
 //   near_lng     Längengrad für Umkreis-Suche
-//   radius_km    Umkreis in km (default 100 wenn near_lat/lng gesetzt, max 500)
+//   radius_km    Umkreis in km (default 100, max 500)
 //   limit        max Ergebnisse (default 50, max 100)
-//
-// Beispiel:
-//   GET /api/creators?city=Berlin&min_age=20&max_age=30
-//   GET /api/creators?near_lat=52.52&near_lng=13.40&radius_km=200
 // ============================================================================
 func (s *Server) listCreators(c *fiber.Ctx) error {
-	// Query-Builder: WHERE-Clauses + Args dynamisch zusammenbauen
 	where := []string{
 		"c.is_listed = TRUE",
 		"u.status = 'active'",
@@ -35,14 +31,12 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 	args := []any{}
 	argIdx := 1
 
-	// city-Filter
 	if city := strings.TrimSpace(c.Query("city")); city != "" {
 		where = append(where, fmt.Sprintf("LOWER(c.city) = LOWER($%d)", argIdx))
 		args = append(args, city)
 		argIdx++
 	}
 
-	// min_age-Filter
 	if minAgeStr := c.Query("min_age"); minAgeStr != "" {
 		minAge, err := strconv.Atoi(minAgeStr)
 		if err != nil || minAge < 18 || minAge > 99 {
@@ -53,7 +47,6 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 		argIdx++
 	}
 
-	// max_age-Filter
 	if maxAgeStr := c.Query("max_age"); maxAgeStr != "" {
 		maxAge, err := strconv.Atoi(maxAgeStr)
 		if err != nil || maxAge < 18 || maxAge > 99 {
@@ -64,8 +57,6 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 		argIdx++
 	}
 
-	// Umkreis-Suche mit Haversine via earthdistance Extension
-	// earth_distance(ll_to_earth(lat1, lng1), ll_to_earth(lat2, lng2)) gibt Meter zurück
 	var distanceSelect, distanceOrder string
 	nearLatStr := c.Query("near_lat")
 	nearLngStr := c.Query("near_lng")
@@ -76,7 +67,6 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 			return errBadRequest(c, "invalid_coordinates")
 		}
 
-		// Radius in km, default 100, max 500
 		radiusKm := 100.0
 		if rStr := c.Query("radius_km"); rStr != "" {
 			r, err := strconv.ParseFloat(rStr, 64)
@@ -86,7 +76,6 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 			radiusKm = r
 		}
 
-		// Distanz-Berechnung + Filter
 		distanceSelect = fmt.Sprintf(
 			", earth_distance(ll_to_earth($%d, $%d), ll_to_earth(c.latitude, c.longitude)) / 1000 AS distance_km",
 			argIdx, argIdx+1,
@@ -99,11 +88,9 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 		args = append(args, nearLat, nearLng, radiusKm)
 		argIdx += 3
 
-		// Bei Umkreis-Suche: nach Distanz sortieren
 		distanceOrder = "distance_km ASC, "
 	}
 
-	// Limit
 	limit := 50
 	if lStr := c.Query("limit"); lStr != "" {
 		l, err := strconv.Atoi(lStr)
@@ -112,11 +99,11 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 		}
 	}
 
-	// Query zusammenbauen
 	query := fmt.Sprintf(`
 		SELECT c.user_id, c.handle, c.display_name, c.bio, c.avatar_url,
 		       c.cover_url, c.message_price_coins, c.is_verified,
-		       c.age, c.city, c.country, c.latitude, c.longitude
+		       c.age, c.city, c.country, c.latitude, c.longitude,
+		       c.gallery_urls, c.profile_data
 		       %s
 		FROM creators c
 		JOIN users u ON u.id = c.user_id
@@ -147,20 +134,37 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 			country           *string
 			latitude          *float64
 			longitude         *float64
+			galleryURLs       []string
+			profileDataRaw    []byte
 			distanceKm        *float64
 		)
 
 		if distanceSelect != "" {
 			if err := rows.Scan(&userID, &handle, &displayName, &bio, &avatarURL, &coverURL,
 				&messagePriceCoins, &isVerified, &age, &city, &country, &latitude, &longitude,
-				&distanceKm); err != nil {
+				&galleryURLs, &profileDataRaw, &distanceKm); err != nil {
 				return errInternal(c, err)
 			}
 		} else {
 			if err := rows.Scan(&userID, &handle, &displayName, &bio, &avatarURL, &coverURL,
-				&messagePriceCoins, &isVerified, &age, &city, &country, &latitude, &longitude); err != nil {
+				&messagePriceCoins, &isVerified, &age, &city, &country, &latitude, &longitude,
+				&galleryURLs, &profileDataRaw); err != nil {
 				return errInternal(c, err)
 			}
+		}
+
+		// JSONB → map
+		var profileData map[string]any
+		if len(profileDataRaw) > 0 {
+			_ = json.Unmarshal(profileDataRaw, &profileData)
+		}
+		if profileData == nil {
+			profileData = map[string]any{}
+		}
+
+		// Galerie default = leeres Array (nicht null im JSON)
+		if galleryURLs == nil {
+			galleryURLs = []string{}
 		}
 
 		entry := fiber.Map{
@@ -175,8 +179,9 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 			"age":                 age,
 			"city":                city,
 			"country":             country,
+			"gallery_urls":        galleryURLs,
+			"profile_data":        profileData,
 		}
-		// Koordinaten + Distanz nur bei Umkreis-Suche zurückgeben (Privacy)
 		if distanceKm != nil {
 			entry["distance_km"] = *distanceKm
 		}
@@ -206,19 +211,35 @@ func (s *Server) getCreatorByHandle(c *fiber.Ctx) error {
 		age               *int
 		city              *string
 		country           *string
+		galleryURLs       []string
+		profileDataRaw    []byte
 	)
 	err := s.db.QueryRow(c.UserContext(), `
 		SELECT c.user_id, c.display_name, c.bio, c.avatar_url, c.cover_url,
 		       c.message_price_coins, c.is_verified,
-		       c.age, c.city, c.country
+		       c.age, c.city, c.country,
+		       c.gallery_urls, c.profile_data
 		FROM creators c
 		JOIN users u ON u.id = c.user_id
 		WHERE c.handle = $1 AND c.is_listed = TRUE AND u.status = 'active'
 	`, handle).Scan(&userID, &displayName, &bio, &avatarURL, &coverURL,
-		&messagePriceCoins, &isVerified, &age, &city, &country)
+		&messagePriceCoins, &isVerified, &age, &city, &country,
+		&galleryURLs, &profileDataRaw)
 
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "creator_not_found"})
+	}
+
+	var profileData map[string]any
+	if len(profileDataRaw) > 0 {
+		_ = json.Unmarshal(profileDataRaw, &profileData)
+	}
+	if profileData == nil {
+		profileData = map[string]any{}
+	}
+
+	if galleryURLs == nil {
+		galleryURLs = []string{}
 	}
 
 	return c.JSON(fiber.Map{
@@ -233,5 +254,7 @@ func (s *Server) getCreatorByHandle(c *fiber.Ctx) error {
 		"age":                 age,
 		"city":                city,
 		"country":             country,
+		"gallery_urls":        galleryURLs,
+		"profile_data":        profileData,
 	})
 }

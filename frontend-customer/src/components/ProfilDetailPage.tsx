@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCreatorByHandle, createConversation, getAccessToken, type Creator } from '@/lib/api';
@@ -18,6 +18,172 @@ function Logo() {
   );
 }
 
+// ============================================================================
+// BILDER-GALERIE — Native CSS Snap-Scroll + Pfeile Desktop
+// ============================================================================
+function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Aktiver Index via Scroll-Event
+  function handleScroll() {
+    if (!scrollerRef.current) return;
+    const sc = scrollerRef.current;
+    const idx = Math.round(sc.scrollLeft / sc.clientWidth);
+    setActiveIndex(idx);
+  }
+
+  function scrollTo(idx: number) {
+    if (!scrollerRef.current) return;
+    scrollerRef.current.scrollTo({
+      left: idx * scrollerRef.current.clientWidth,
+      behavior: 'smooth',
+    });
+  }
+
+  function next() {
+    scrollTo(Math.min(activeIndex + 1, images.length - 1));
+  }
+  function prev() {
+    scrollTo(Math.max(activeIndex - 1, 0));
+  }
+
+  if (images.length === 0) {
+    return <div className="w-full aspect-[4/5] bg-zinc-200 rounded-t-2xl" />;
+  }
+
+  return (
+    <div className="relative group">
+      {/* Scroller */}
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        className="snap-x-gallery flex overflow-x-auto aspect-[4/5] sm:aspect-[3/2] bg-zinc-100 rounded-t-2xl"
+      >
+        {images.map((src, i) => (
+          <div key={i} className="snap-center shrink-0 w-full h-full">
+            <img
+              src={src}
+              alt={`${alt} – Bild ${i + 1}`}
+              className="w-full h-full object-cover"
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Indikator-Punkte */}
+      {images.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => scrollTo(i)}
+              className={`transition-all rounded-full ${
+                i === activeIndex
+                  ? 'w-5 h-1.5 bg-white'
+                  : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Bild ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Bild-Counter oben rechts */}
+      {images.length > 1 && (
+        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[11px] font-semibold px-2 py-1 rounded-full">
+          {activeIndex + 1} / {images.length}
+        </div>
+      )}
+
+      {/* Pfeile Desktop (versteckt Mobile) */}
+      {images.length > 1 && (
+        <>
+          {activeIndex > 0 && (
+            <button
+              onClick={prev}
+              className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              aria-label="Vorheriges Bild"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+          )}
+          {activeIndex < images.length - 1 && (
+            <button
+              onClick={next}
+              className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              aria-label="Nächstes Bild"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// HELPER — Steckbrief-Kachel mit Icon
+// ============================================================================
+function FactCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return (
+    <div className="bg-zinc-50 border border-zinc-100 rounded-xl px-3 py-2.5 text-center">
+      <div className="flex justify-center mb-1 text-zinc-500">{icon}</div>
+      <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold">{label}</div>
+      <div className="font-semibold text-sm text-zinc-900 mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+// ============================================================================
+// HELPER — Detail-Zeile in "Über mich"
+// ============================================================================
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-b-0">
+      <span className="text-sm text-zinc-500">{label}</span>
+      <span className="text-sm font-medium text-zinc-900">{value}</span>
+    </div>
+  );
+}
+
+// ============================================================================
+// HELPER — Tag-Pills (für was-ich-suche / antörnt / interessen)
+// ============================================================================
+function TagList({ tags, variant }: { tags: string[]; variant?: 'pink' | 'rose' | 'zinc' }) {
+  const styles = {
+    pink: 'bg-brand-50 text-brand-700 border-brand-100',
+    rose: 'bg-rose-50 text-rose-700 border-rose-100',
+    zinc: 'bg-zinc-50 text-zinc-700 border-zinc-200',
+  };
+  const cls = styles[variant || 'zinc'];
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((tag, i) => (
+        <span
+          key={i}
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${cls}`}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// HAUPT-KOMPONENTE
+// ============================================================================
 export default function ProfilDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -49,13 +215,12 @@ export default function ProfilDetailPage() {
       router.push('/register');
       return;
     }
-
     setStartingChat(true);
     try {
       const { id } = await createConversation(profile.user_id);
       router.push(`/inbox/${id}`);
     } catch (err) {
-      console.error('Chat-Start fehlgeschlagen:', err);
+      console.error(err);
       setStartingChat(false);
     }
   }
@@ -67,37 +232,31 @@ export default function ProfilDetailPage() {
     return (
       <>
         {mounted && authed ? <AppHeader /> : (
-          <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
+          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6"><Logo /></div>
           </header>
         )}
-        <main className="min-h-screen bg-soft-gradient flex items-center justify-center">
+        <main className="min-h-screen bg-zinc-50 flex items-center justify-center">
           <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin" />
         </main>
       </>
     );
   }
 
-  // ===========================================================================
-  // FEHLER-ZUSTAND
-  // ===========================================================================
   if (error || !profile) {
     return (
       <>
         {mounted && authed ? <AppHeader /> : (
-          <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
+          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6"><Logo /></div>
           </header>
         )}
-        <main className="min-h-screen bg-soft-gradient flex items-center justify-center p-6">
+        <main className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
           <div className="text-center">
             <div className="text-4xl mb-3">😕</div>
             <h1 className="font-display text-xl font-semibold mb-2">Profil nicht gefunden</h1>
             <p className="text-zinc-600 text-sm mb-5">{error}</p>
-            <Link
-              href="/explore"
-              className="inline-block bg-brand-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-brand-700 transition-colors"
-            >
+            <Link href="/explore" className="inline-block bg-brand-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-brand-700 transition-colors">
               Zurück zur Übersicht
             </Link>
           </div>
@@ -107,14 +266,20 @@ export default function ProfilDetailPage() {
   }
 
   // ===========================================================================
-  // PROFIL-ANSICHT
+  // PROFIL-DATEN AUSPACKEN
+  // ===========================================================================
+  const pd = profile.profile_data || {};
+  const images = profile.gallery_urls && profile.gallery_urls.length > 0
+    ? profile.gallery_urls
+    : (profile.avatar_url ? [profile.avatar_url] : []);
+
+  // ===========================================================================
+  // RENDER
   // ===========================================================================
   return (
     <>
-      {mounted && authed ? (
-        <AppHeader />
-      ) : (
-        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
+      {mounted && authed ? <AppHeader /> : (
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-zinc-200/50 py-2.5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
             <Link href="/" className="flex items-center"><Logo /></Link>
             <div className="flex items-center gap-2 sm:gap-4">
@@ -125,12 +290,12 @@ export default function ProfilDetailPage() {
         </header>
       )}
 
-      <main className="min-h-screen bg-soft-gradient pb-24 sm:pb-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
+      <main className="min-h-screen bg-zinc-50 pb-32 sm:pb-12">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-3 sm:pt-6">
           {/* Zurück-Link */}
           <Link
             href="/explore"
-            className="inline-flex items-center gap-1.5 text-sm text-zinc-600 hover:text-brand-600 transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-600 hover:text-brand-600 transition-colors mb-3 sm:mb-4 px-1"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
@@ -139,23 +304,13 @@ export default function ProfilDetailPage() {
             Zurück zur Übersicht
           </Link>
 
-          {/* PROFIL-CARD */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-pink border border-zinc-100">
-            {/* Bild */}
-            <div className="relative aspect-[4/5] sm:aspect-[3/2] overflow-hidden bg-zinc-100">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.display_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-zinc-200" />
-              )}
-              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 to-transparent" />
+          <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100">
+            {/* ============== BILDER-GALERIE ============== */}
+            <div className="relative">
+              <PhotoGallery images={images} alt={profile.display_name} />
 
-              {/* Online-Badge */}
-              <div className="absolute top-3 left-3">
+              {/* Overlay-Badges */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
                 <span className="flex items-center gap-1.5 bg-white/95 backdrop-blur text-zinc-800 text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -163,53 +318,151 @@ export default function ProfilDetailPage() {
                   </span>
                   Online
                 </span>
-              </div>
-
-              {/* Verifiziert-Badge */}
-              {profile.is_verified && (
-                <div className="absolute top-3 right-3">
-                  <span className="flex items-center gap-1 bg-blue-500/95 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L9 5L5 5L5 9L2 12L5 15L5 19L9 19L12 22L15 19L19 19L19 15L22 12L19 9L19 5L15 5L12 2zM10 17L5 12L7 10L10 13L17 6L19 8L10 17z" />
-                    </svg>
+                {profile.is_verified && (
+                  <span className="hidden sm:flex items-center gap-1 bg-blue-500/95 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9 5L5 5L5 9L2 12L5 15L5 19L9 19L12 22L15 19L19 19L19 15L22 12L19 9L19 5L15 5L12 2zM10 17L5 12L7 10L10 13L17 6L19 8L10 17z" /></svg>
                     Verifiziert
                   </span>
-                </div>
-              )}
-
-              {/* Name + Alter + Stadt */}
-              <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <h1 className="font-display text-3xl sm:text-4xl font-semibold leading-tight">
-                  {profile.display_name}
-                  {profile.age && <span className="font-normal opacity-90">, {profile.age}</span>}
-                </h1>
-                {profile.city && (
-                  <div className="flex items-center gap-1.5 mt-1 text-sm opacity-90">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
-                    </svg>
-                    {profile.city}
-                  </div>
                 )}
               </div>
             </div>
 
-            {/* Inhalt */}
-            <div className="p-5 sm:p-7">
-              {/* Bio */}
-              {profile.bio && (
-                <div className="mb-5">
-                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-2">
-                    Über mich
-                  </div>
-                  <p className="text-zinc-700 leading-relaxed whitespace-pre-wrap">
-                    {profile.bio}
-                  </p>
+            {/* ============== HEADER (Name, Alter, Stadt) ============== */}
+            <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4">
+              <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-tight">
+                {profile.display_name}
+                {profile.age && <span className="font-normal text-zinc-700">, {profile.age}</span>}
+              </h1>
+              {profile.city && (
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-zinc-600">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-brand-500">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                  </svg>
+                  {profile.city}
                 </div>
               )}
+            </div>
 
-              {/* Coin-Preis Info-Box */}
-              <div className="flex items-center gap-3 bg-amber-50/60 border border-amber-200/50 rounded-xl p-3 sm:p-4 mb-5">
+            {/* ============== BIO ============== */}
+            {profile.bio && (
+              <div className="px-5 sm:px-7 pb-5">
+                <p className="text-zinc-700 leading-relaxed text-[15px] whitespace-pre-wrap">
+                  {profile.bio}
+                </p>
+              </div>
+            )}
+
+            {/* ============== STECKBRIEF-KACHELN ============== */}
+            <div className="px-5 sm:px-7 pb-5">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-3">
+                Steckbrief
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {profile.age && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.5c1.93 0 3.5 1.57 3.5 3.5h2c0-3.04-2.46-5.5-5.5-5.5S6.5 6.96 6.5 10s2.46 5.5 5.5 5.5v2c-1.93 0-3.5 1.57-3.5 3.5h-2c0 3.04 2.46 5.5 5.5 5.5z" /></svg>}
+                    label="Alter"
+                    value={`${profile.age} J.`}
+                  />
+                )}
+                {pd.height_cm && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22" /><polyline points="6 8 12 2 18 8" /><polyline points="6 16 12 22 18 16" /></svg>}
+                    label="Größe"
+                    value={`${pd.height_cm} cm`}
+                  />
+                )}
+                {pd.hair_color && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 7.4 12.3l.6.6.6-.6c.4-.3 7.4-6.9 7.4-12.3a8 8 0 0 0-8-8z" /></svg>}
+                    label="Haare"
+                    value={pd.hair_color}
+                  />
+                )}
+                {pd.eye_color && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>}
+                    label="Augen"
+                    value={pd.eye_color}
+                  />
+                )}
+                {pd.zodiac && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z" /></svg>}
+                    label="Sternzeichen"
+                    value={pd.zodiac}
+                  />
+                )}
+                {profile.city && (
+                  <FactCard
+                    icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /></svg>}
+                    label="Stadt"
+                    value={profile.city}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* ============== ÜBER MICH ============== */}
+            <div className="px-5 sm:px-7 pb-5">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2">
+                Über mich
+              </div>
+              <div className="bg-zinc-50/50 rounded-xl px-4 py-1">
+                {pd.figure && <InfoRow label="Figur" value={pd.figure} />}
+                {pd.hair_length && <InfoRow label="Haarlänge" value={pd.hair_length} />}
+                {pd.tattoos && <InfoRow label="Tattoos" value={pd.tattoos} />}
+                {pd.piercings && <InfoRow label="Piercings" value={pd.piercings} />}
+                {pd.smoker && <InfoRow label="Raucherin" value={pd.smoker} />}
+                {pd.marital_status && <InfoRow label="Beziehungsstatus" value={pd.marital_status} />}
+              </div>
+            </div>
+
+            {/* ============== WAS ICH SUCHE ============== */}
+            {pd.looking_for && pd.looking_for.length > 0 && (
+              <div className="px-5 sm:px-7 pb-5">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
+                  Was ich suche
+                </div>
+                <TagList tags={pd.looking_for} variant="pink" />
+              </div>
+            )}
+
+            {/* ============== WAS MICH ANTÖRNT ============== */}
+            {pd.turn_ons && pd.turn_ons.length > 0 && (
+              <div className="px-5 sm:px-7 pb-5">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
+                  Was mich antörnt
+                </div>
+                <TagList tags={pd.turn_ons} variant="rose" />
+              </div>
+            )}
+
+            {/* ============== INTERESSEN ============== */}
+            {pd.interests && pd.interests.length > 0 && (
+              <div className="px-5 sm:px-7 pb-5">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
+                  Interessen
+                </div>
+                <TagList tags={pd.interests} variant="zinc" />
+              </div>
+            )}
+
+            {/* ============== PERSÖNLICHKEIT (Freitext) ============== */}
+            {pd.about_text && (
+              <div className="px-5 sm:px-7 pb-6">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2">
+                  Das macht mich aus
+                </div>
+                <p className="text-zinc-700 italic leading-relaxed text-[15px]">
+                  „{pd.about_text}"
+                </p>
+              </div>
+            )}
+
+            {/* ============== COIN-PREIS-BOX ============== */}
+            <div className="mx-5 sm:mx-7 mb-5">
+              <div className="flex items-center gap-3 bg-amber-50/60 border border-amber-200/50 rounded-xl p-3.5">
                 <div className="shrink-0">
                   <CoinIcon size={28} />
                 </div>
@@ -222,41 +475,42 @@ export default function ProfilDetailPage() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* CTA — nur Desktop (Mobile hat Sticky-CTA unten) */}
-              <div className="hidden sm:block">
-                {authed ? (
-                  <button
-                    onClick={handleStartChat}
-                    disabled={startingChat}
-                    className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-full transition-all shadow-pink-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {startingChat ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                        Nachricht senden
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <Link
-                    href="/register"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-full transition-all shadow-pink-lg"
-                  >
-                    Kostenlos registrieren um zu schreiben
-                  </Link>
-                )}
-              </div>
+            {/* ============== CTA Desktop (Mobile hat Sticky unten) ============== */}
+            <div className="hidden sm:block px-7 pb-7">
+              {authed ? (
+                <button
+                  onClick={handleStartChat}
+                  disabled={startingChat}
+                  className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-full transition-all shadow-pink-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {startingChat ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      Nachricht senden
+                    </>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  href="/register"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-full transition-all shadow-pink-lg"
+                >
+                  Kostenlos registrieren um zu schreiben
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
-        {/* MOBILE STICKY CTA */}
-        <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-zinc-200 px-4 py-3 z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+        {/* ============== MOBILE STICKY CTA ============== */}
+        <div className="sm:hidden fixed inset-x-0 z-30 px-4 py-3 bg-white border-t border-zinc-200 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]"
+             style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           {authed ? (
             <button
               onClick={handleStartChat}

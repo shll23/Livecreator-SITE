@@ -73,15 +73,15 @@ export default function AppHeader() {
   const isInbox = pathname?.startsWith('/inbox');
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-100">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-zinc-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2">
         <Link href="/explore" aria-label="Zur Startseite">
           <Logo />
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Desktop Nav */}
-          <nav className="hidden sm:flex items-center gap-1 mr-1">
+          {/* Desktop Nav (versteckt Mobile) */}
+          <nav className="hidden lg:flex items-center gap-1 mr-1">
             <Link
               href="/explore"
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
@@ -105,7 +105,7 @@ export default function AppHeader() {
             </Link>
           </nav>
 
-          {/* COIN-PILL — goldene Münze, weißer Hintergrund mit dezentem Rahmen */}
+          {/* COIN-PILL — immer sichtbar */}
           <Link
             href="/wallet"
             className="flex items-center gap-1.5 bg-white hover:bg-amber-50/40 border border-amber-200/60 px-2 sm:px-2.5 py-1 rounded-full transition-all shadow-sm"
@@ -117,30 +117,14 @@ export default function AppHeader() {
             </span>
           </Link>
 
-          {/* Inbox-Icon Mobile */}
-          <Link
-            href="/inbox"
-            className="sm:hidden relative p-1.5 rounded-full hover:bg-zinc-100 transition-colors"
-            aria-label="Nachrichten"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            {mounted && unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-brand-600 text-white text-[9px] font-bold rounded-full min-w-[15px] h-[15px] px-0.5 flex items-center justify-center">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Avatar / Menu */}
-          <div className="relative">
+          {/* Desktop Avatar/Menu (versteckt Mobile - dort übernimmt Tab Bar) */}
+          <div className="hidden lg:block relative">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setMenuOpen(!menuOpen);
               }}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition-colors"
               aria-label="Menü"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -149,7 +133,13 @@ export default function AppHeader() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-zinc-200/60 overflow-hidden animate-fade-up">
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-zinc-200/60 overflow-hidden">
+                <Link href="/profile" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                  Mein Profil
+                </Link>
                 <Link href="/wallet" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
                   <CoinIcon size={14} />
                   Coins kaufen

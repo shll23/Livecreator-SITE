@@ -2,25 +2,35 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   getWallet,
   getPackages,
-  getPurchases,
   startPurchase,
-  formatCents,
   getAccessToken,
-  APIError,
+  formatCents,
   type CoinPackage,
 } from '@/lib/api';
 import AppHeader from '@/components/AppHeader';
+
+// ============================================================================
+// WALLET-PAGE — Schwarz/Weiß seriöses Design für zahlende Kunden
+//
+// Hierarchie:
+//   1. Guthaben-Karte oben (anthrazit, gold-akzent)
+//   2. Coin-Pakete (4 Karten, "Beliebt"-Marker auf Paket 2)
+//   3. Trust-Sektion mit Anonym/PCI DSS/Sichere Zahlung
+//   4. Footer mit Sicherheits-Erklärung
+// ============================================================================
+
+const POPULAR_SORT_ORDER = 2; // Paket mit sort_order=2 wird als "Beliebt" markiert
 
 export default function WalletPage() {
   const router = useRouter();
   const [balance, setBalance] = useState<number | null>(null);
   const [packages, setPackages] = useState<CoinPackage[]>([]);
-  const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState<string | null>(null);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,198 +38,267 @@ export default function WalletPage() {
       router.push('/login');
       return;
     }
-    refresh();
-    // Refresh wenn der User vom Mock-Confirm-Tab zurückkommt
-    const onFocus = () => refresh();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    Promise.all([getWallet(), getPackages()])
+      .then(([w, p]) => {
+        setBalance(w.balance_coins);
+        setPackages(p.packages);
+      })
+      .catch((err) => {
+        console.error('Wallet load error:', err);
+        setError('Fehler beim Laden des Wallets.');
+      })
+      .finally(() => setLoading(false));
   }, [router]);
 
-  async function refresh() {
-    try {
-      const [walletRes, pkgRes, purchasesRes] = await Promise.all([
-        getWallet(),
-        getPackages(),
-        getPurchases().catch(() => ({ purchases: [] })),
-      ]);
-      setBalance(walletRes.balance_coins);
-      setPackages(pkgRes.packages);
-      setPurchases(purchasesRes.purchases);
-    } catch (err) {
-      if (err instanceof APIError && err.status === 401) {
-        router.push('/login');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleBuy(pkgId: string) {
-    setBuying(pkgId);
+  async function handlePurchase(pkg: CoinPackage) {
+    setPurchasing(pkg.id);
     setError(null);
     try {
-      const res = await startPurchase(pkgId);
-      // Mock-Confirm-Tab öffnen
-      window.open(res.redirect_url, '_blank');
-      // Liste aktualisieren (pending Eintrag)
-      refresh();
-    } catch (err) {
-      if (err instanceof APIError) {
-        setError(`Fehler: ${err.code}`);
-      } else {
-        setError('Verbindung fehlgeschlagen');
+      const res = await startPurchase(pkg.id);
+      if (res.redirect_url) {
+        window.open(res.redirect_url, '_blank');
       }
+    } catch (err: any) {
+      setError(err?.code || 'Kauf konnte nicht gestartet werden.');
     } finally {
-      setBuying(null);
+      setPurchasing(null);
     }
-  }
-
-  // "Beliebt"-Paket: Mittel-Tier (500 Coins / Standard)
-  function isPopular(pkg: CoinPackage) {
-    return pkg.coins === 500;
-  }
-
-  // Bonus-Berechnung relativ zum Starter-Pack (100 Coins / 9.99€)
-  function getBonus(pkg: CoinPackage): number | null {
-    if (pkg.coins === 100) return null;
-    const basePricePerCoin = 9.99 / 100; // Starter-Referenz
-    const fairValue = pkg.coins * basePricePerCoin * 100;
-    const bonus = Math.round(((fairValue - pkg.price_cents) / pkg.price_cents) * 100);
-    return bonus > 0 ? bonus : null;
   }
 
   return (
-    <div className="min-h-screen bg-soft-gradient">
+    <>
       <AppHeader />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* GUTHABEN-KARTE — kompakt */}
-        <section className="bg-gradient-to-br from-brand-500 to-brand-700 text-white rounded-2xl p-5 sm:p-6 shadow-pink-lg mb-6 sm:mb-8">
-          <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-80 mb-1.5">
-            Dein Guthaben
+      <main className="min-h-screen bg-zinc-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 pb-8">
+          {/* ===== HEADLINE ===== */}
+          <div className="mb-5 sm:mb-7">
+            <h1 className="font-display text-2xl sm:text-4xl font-semibold tracking-tight text-zinc-900 mb-1">
+              Dein Guthaben
+            </h1>
+            <p className="text-sm text-zinc-500">Coins sind die Währung für Nachrichten.</p>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-4xl sm:text-5xl font-semibold leading-none">
-              {loading ? '…' : balance}
-            </span>
-            <span className="text-base sm:text-lg opacity-90">Coins</span>
-          </div>
-          <div className="text-xs sm:text-sm opacity-85 mt-2">
-            Nutze Coins, um Nachrichten zu senden, Küsse zu verschicken und private Bilder freizuschalten.
-          </div>
-        </section>
 
-        {/* COIN-PAKETE */}
-        <section className="mb-8 sm:mb-12">
-          <h2 className="font-display text-xl sm:text-2xl font-semibold mb-4 sm:mb-5">
-            Coins kaufen
-          </h2>
+          {/* ===== GUTHABEN-KARTE (anthrazit, Gold-Akzent) ===== */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 p-5 sm:p-7 mb-6 sm:mb-8 shadow-lg">
+            {/* Subtiler Gold-Glanz oben rechts */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-400/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
+            <div className="relative flex items-center justify-between gap-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-1">
+                  Aktuelles Guthaben
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-4xl sm:text-5xl font-semibold text-white tabular-nums">
+                    {loading ? '…' : balance ?? 0}
+                  </span>
+                  <span className="text-base text-zinc-400 font-medium">Coins</span>
+                </div>
+              </div>
+
+              {/* Goldene Münze groß */}
+              <div className="shrink-0">
+                <svg width="64" height="64" viewBox="0 0 24 24" className="drop-shadow-lg">
+                  <defs>
+                    <linearGradient id="bigCoinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFE082" />
+                      <stop offset="50%" stopColor="#FFC107" />
+                      <stop offset="100%" stopColor="#F9A825" />
+                    </linearGradient>
+                    <linearGradient id="bigCoinInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#FFD54F" />
+                      <stop offset="100%" stopColor="#FFA000" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="12" cy="12" r="11" fill="url(#bigCoinGradient)" />
+                  <circle cx="12" cy="12" r="8.5" fill="url(#bigCoinInner)" />
+                  <ellipse cx="9" cy="8" rx="3" ry="2" fill="#FFF8E1" opacity="0.5" />
+                  <text x="12" y="16" fontSize="11" fontWeight="900" textAnchor="middle" fill="#8B4513" style={{ letterSpacing: '-0.5px' }}>€</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== ERROR ===== */}
           {error && (
-            <div className="mb-4 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg">
+            <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
               {error}
             </div>
           )}
 
+          {/* ===== HEADLINE PAKETE ===== */}
+          <div className="mb-4">
+            <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 mb-1">
+              Coins kaufen
+            </h2>
+            <p className="text-sm text-zinc-500">Einmalig zahlen. Kein Abo. Jederzeit verwendbar.</p>
+          </div>
+
+          {/* ===== PAKETE-GRID ===== */}
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-[4/5] bg-zinc-200/60 animate-pulse rounded-xl" />
+                <div key={i} className="h-44 bg-zinc-200/60 animate-pulse rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {packages.map((pkg) => {
-                const popular = isPopular(pkg);
-                const bonus = getBonus(pkg);
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
+              {packages.map((pkg, idx) => {
+                // sort_order kommt vom Backend; wir nehmen den Index als Fallback
+                const isPopular = (idx + 1) === POPULAR_SORT_ORDER;
+                const pricePerCoin = pkg.price_cents / pkg.coins / 100;
+
                 return (
                   <div
                     key={pkg.id}
-                    className={`
-                      relative bg-white rounded-xl p-3.5 sm:p-4 border transition-all
-                      ${popular ? 'border-brand-300 shadow-pink-lg' : 'border-zinc-200 hover:border-zinc-300'}
-                    `}
+                    className={`relative bg-white rounded-2xl border transition-all ${
+                      isPopular
+                        ? 'border-zinc-900 shadow-lg ring-1 ring-zinc-900/5'
+                        : 'border-zinc-200 hover:border-zinc-300 hover:shadow-md'
+                    }`}
                   >
-                    {popular && (
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap">
-                        ★ Beliebt
+                    {isPopular && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                        <span className="bg-brand-600 text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full shadow-pink">
+                          ★ Beliebt
+                        </span>
                       </div>
                     )}
-                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5 font-medium">
-                      {pkg.name}
-                    </div>
-                    <div className="flex items-baseline gap-1 mb-1">
-                      <span className="font-display text-2xl sm:text-3xl font-semibold text-zinc-900 leading-none">
-                        {pkg.coins}
-                      </span>
-                      <span className="text-xs text-zinc-500">Coins</span>
-                    </div>
-                    {bonus && (
-                      <div className="text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded inline-block mb-2">
-                        +{bonus}% Bonus
+
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">
+                          {pkg.name}
+                        </span>
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                          <defs>
+                            <linearGradient id={`coin-${pkg.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#FFE082" />
+                              <stop offset="50%" stopColor="#FFC107" />
+                              <stop offset="100%" stopColor="#F9A825" />
+                            </linearGradient>
+                          </defs>
+                          <circle cx="12" cy="12" r="11" fill={`url(#coin-${pkg.id})`} />
+                          <text x="12" y="16" fontSize="11" fontWeight="900" textAnchor="middle" fill="#8B4513">€</text>
+                        </svg>
                       </div>
-                    )}
-                    <div className="text-sm sm:text-base font-semibold text-zinc-900 mb-3 mt-1">
-                      {formatCents(pkg.price_cents, pkg.currency)}
+
+                      <div className="flex items-baseline gap-1.5 mb-2">
+                        <span className="font-display text-3xl sm:text-4xl font-semibold text-zinc-900 tabular-nums">
+                          {pkg.coins}
+                        </span>
+                        <span className="text-sm text-zinc-500 font-medium">Coins</span>
+                      </div>
+
+                      <div className="flex items-baseline justify-between mb-4">
+                        <span className="text-lg font-semibold text-zinc-900">
+                          {formatCents(pkg.price_cents, pkg.currency)}
+                        </span>
+                        <span className="text-[11px] text-zinc-400 tabular-nums">
+                          {(pricePerCoin * 100).toFixed(1)} ct/Coin
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handlePurchase(pkg)}
+                        disabled={purchasing === pkg.id}
+                        className={`w-full py-2.5 rounded-full text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                          isPopular
+                            ? 'bg-zinc-900 hover:bg-zinc-800 text-white'
+                            : 'bg-white border border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white'
+                        }`}
+                      >
+                        {purchasing === pkg.id ? (
+                          <span className="inline-flex items-center gap-2">
+                            <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Wird geöffnet…
+                          </span>
+                        ) : (
+                          'Jetzt kaufen'
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleBuy(pkg.id)}
-                      disabled={buying === pkg.id}
-                      className={`
-                        w-full text-xs sm:text-sm font-semibold py-2 rounded-full transition-all
-                        ${popular
-                          ? 'bg-brand-600 text-white hover:bg-brand-700'
-                          : 'bg-zinc-900 text-white hover:bg-zinc-800'
-                        }
-                        disabled:opacity-50 disabled:cursor-not-allowed
-                      `}
-                    >
-                      {buying === pkg.id ? '…' : 'Kaufen'}
-                    </button>
                   </div>
                 );
               })}
             </div>
           )}
-        </section>
 
-        {/* KÄUFE-HISTORIE */}
-        {purchases.length > 0 && (
-          <section>
-            <h2 className="font-display text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
-              Käufe
-            </h2>
-            <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-              <div className="hidden sm:grid grid-cols-4 gap-4 px-4 py-2.5 border-b border-zinc-100 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
-                <div>Paket</div>
-                <div>Coins</div>
-                <div>Preis</div>
-                <div className="text-right">Status</div>
-              </div>
-              {purchases.map((p, i) => (
-                <div
-                  key={p.id || i}
-                  className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 px-4 py-3 border-b border-zinc-50 last:border-b-0 text-sm items-center"
-                >
-                  <div className="font-medium text-zinc-900">{p.package_name || p.name || '—'}</div>
-                  <div className="text-zinc-700">{p.coins}</div>
-                  <div className="text-zinc-700 hidden sm:block">{formatCents(p.price_cents, p.currency)}</div>
-                  <div className="text-right">
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      p.status === 'completed' ? 'bg-green-50 text-green-700' :
-                      p.status === 'pending' ? 'bg-amber-50 text-amber-700' :
-                      'bg-zinc-100 text-zinc-600'
-                    }`}>
-                      {p.status === 'completed' ? 'Erhalten' :
-                       p.status === 'pending' ? 'Ausstehend' : p.status}
-                    </span>
+          {/* ===== TRUST-SEKTION ===== */}
+          <div className="bg-white border border-zinc-200 rounded-2xl p-5 sm:p-6 mb-5">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-4">
+              Deine Sicherheit
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-zinc-900 mb-0.5">100% Anonym</div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    Auf deiner Abrechnung erscheint <span className="font-medium">niemals</span> verliebdich.com.
                   </div>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-zinc-900 mb-0.5">Einmalig · Kein Abo</div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    Du zahlst nur was du kaufst. Keine versteckten Kosten.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-zinc-900 mb-0.5">PCI DSS zertifiziert</div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    256-Bit SSL-Verschlüsselung. Höchster Bank-Standard.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-zinc-900 mb-0.5">VISA · Mastercard · PayPal</div>
+                  <div className="text-xs text-zinc-600 leading-relaxed">
+                    Alle gängigen Zahlungsmittel akzeptiert.
+                  </div>
+                </div>
+              </div>
             </div>
-          </section>
-        )}
+          </div>
+
+          {/* ===== KLEINGEDRUCKTES ===== */}
+          <p className="text-[11px] text-zinc-400 text-center leading-relaxed px-4">
+            Mit deinem Kauf akzeptierst du unsere <Link href="/agb" className="underline hover:text-zinc-600">AGB</Link>.
+            Coins sind nicht erstattbar und nicht in echtes Geld umtauschbar.
+            Du musst mindestens 18 Jahre alt sein.
+          </p>
+        </div>
       </main>
-    </div>
+    </>
   );
 }
