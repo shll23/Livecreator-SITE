@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { getWallet, getInbox, logout, getAccessToken } from '@/lib/api';
+import CoinIcon from '@/components/CoinIcon';
 
 function Logo() {
   return (
@@ -68,7 +69,7 @@ export default function AppHeader() {
     router.push('/login');
   }
 
-  const isExplore = pathname?.startsWith('/explore');
+  const isExplore = pathname?.startsWith('/explore') || pathname?.startsWith('/profil');
   const isInbox = pathname?.startsWith('/inbox');
 
   return (
@@ -95,7 +96,7 @@ export default function AppHeader() {
                 isInbox ? 'bg-brand-50 text-brand-700' : 'text-zinc-600 hover:text-brand-600 hover:bg-zinc-50'
               }`}
             >
-              Chats
+              Nachrichten
               {mounted && unreadCount > 0 && (
                 <span className="bg-brand-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
@@ -104,25 +105,23 @@ export default function AppHeader() {
             </Link>
           </nav>
 
-          {/* COIN-PILL — soft pink */}
+          {/* COIN-PILL — goldene Münze, weißer Hintergrund mit dezentem Rahmen */}
           <Link
             href="/wallet"
-            className="flex items-center gap-1 bg-brand-50/70 hover:bg-brand-50 border border-brand-100 px-2 sm:px-2.5 py-1 rounded-full transition-all"
+            className="flex items-center gap-1.5 bg-white hover:bg-amber-50/40 border border-amber-200/60 px-2 sm:px-2.5 py-1 rounded-full transition-all shadow-sm"
             aria-label="Coins kaufen"
           >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-brand-500">
-              <circle cx="12" cy="12" r="10" />
-            </svg>
-            <span className="text-xs sm:text-sm font-semibold text-brand-700 tabular-nums">
+            <CoinIcon size={14} />
+            <span className="text-xs sm:text-sm font-semibold text-zinc-800 tabular-nums">
               {mounted && coins !== null ? coins : '…'}
             </span>
           </Link>
 
-          {/* Inbox-Icon Mobile — kompakter */}
+          {/* Inbox-Icon Mobile */}
           <Link
             href="/inbox"
             className="sm:hidden relative p-1.5 rounded-full hover:bg-zinc-100 transition-colors"
-            aria-label="Chats"
+            aria-label="Nachrichten"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -134,7 +133,7 @@ export default function AppHeader() {
             )}
           </Link>
 
-          {/* Avatar — kleiner, dezenter */}
+          {/* Avatar / Menu */}
           <div className="relative">
             <button
               onClick={(e) => {
@@ -152,21 +151,17 @@ export default function AppHeader() {
             {menuOpen && (
               <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-zinc-200/60 overflow-hidden animate-fade-up">
                 <Link href="/wallet" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                    <path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
-                  </svg>
+                  <CoinIcon size={14} />
                   Coins kaufen
                 </Link>
                 <Link href="/settings" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                   Einstellungen
                 </Link>
                 <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />

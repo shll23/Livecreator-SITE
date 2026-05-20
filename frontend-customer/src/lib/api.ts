@@ -196,10 +196,33 @@ export interface Creator {
   cover_url: string | null;
   message_price_coins: number;
   is_verified: boolean;
+  age: number | null;
+  city: string | null;
+  country: string | null;
+  distance_km?: number;
 }
 
-export async function listCreators(): Promise<{ creators: Creator[] }> {
-  return api('/api/creators');
+export interface CreatorFilters {
+  city?: string;
+  min_age?: number;
+  max_age?: number;
+  near_lat?: number;
+  near_lng?: number;
+  radius_km?: number;
+  limit?: number;
+}
+
+export async function listCreators(filters: CreatorFilters = {}): Promise<{ creators: Creator[] }> {
+  const params = new URLSearchParams();
+  if (filters.city) params.set('city', filters.city);
+  if (filters.min_age != null) params.set('min_age', String(filters.min_age));
+  if (filters.max_age != null) params.set('max_age', String(filters.max_age));
+  if (filters.near_lat != null) params.set('near_lat', String(filters.near_lat));
+  if (filters.near_lng != null) params.set('near_lng', String(filters.near_lng));
+  if (filters.radius_km != null) params.set('radius_km', String(filters.radius_km));
+  if (filters.limit != null) params.set('limit', String(filters.limit));
+  const qs = params.toString();
+  return api(`/api/creators${qs ? '?' + qs : ''}`);
 }
 
 export async function getCreatorByHandle(handle: string): Promise<Creator> {
@@ -251,7 +274,7 @@ export interface SendMessageResponse {
   body: string;
   coin_cost: number;
   created_at: string;
-  balance_coins?: number; // nur bei customer-send
+  balance_coins?: number;
 }
 
 export async function getInbox(): Promise<{ conversations: Conversation[] }> {

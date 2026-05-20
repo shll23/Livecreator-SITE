@@ -19,6 +19,7 @@ import {
   type Message,
 } from '@/lib/api';
 import AppHeader from '@/components/AppHeader';
+import CoinIcon from '@/components/CoinIcon';
 
 interface InboxPageProps {
   initialConversationId?: string;
@@ -221,7 +222,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
         >
           <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-100">
             <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight">
-              Chats
+              Nachrichten
             </h1>
           </div>
 
@@ -241,7 +242,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
             ) : conversations.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="text-4xl mb-3">💬</div>
-                <h2 className="font-semibold text-zinc-900 mb-2 text-sm">Noch keine Chats</h2>
+                <h2 className="font-semibold text-zinc-900 mb-2 text-sm">Noch keine Nachrichten</h2>
                 <p className="text-xs text-zinc-600 mb-4">
                   Schreibe eine Frau an, um ein Gespräch zu starten.
                 </p>
@@ -342,8 +343,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm truncate">{activeDetail.peer_name}</div>
-                  <div className="text-[10px] text-zinc-500">
-                    {activeDetail.message_price_coins} Coins pro Nachricht
+                  <div className="text-[10px] text-zinc-500 flex items-center gap-1">
+                    <CoinIcon size={9} />
+                    {activeDetail.message_price_coins} pro Nachricht
                   </div>
                 </div>
               </div>
@@ -351,7 +353,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 space-y-2">
                 {messages.length === 0 ? (
-                  // EMPTY STATE — schön mit Vorschlägen
                   <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
                     <div className="relative mb-4">
                       {activeDetail.peer_avatar ? (
@@ -473,10 +474,15 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                 </form>
 
                 <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
-                  <span>{messagePrice} Coins pro Nachricht</span>
+                  <span className="flex items-center gap-1">
+                    <CoinIcon size={10} />
+                    {messagePrice} pro Nachricht
+                  </span>
                   {balance !== null && (
-                    <span>
-                      Du hast <span className="font-semibold text-brand-700">{balance}</span> Coins
+                    <span className="flex items-center gap-1">
+                      Guthaben:
+                      <CoinIcon size={10} />
+                      <span className="font-semibold text-zinc-800">{balance}</span>
                       {balance < messagePrice && (
                         <Link href="/wallet" className="ml-2 text-brand-600 hover:underline font-semibold">
                           Aufladen →
