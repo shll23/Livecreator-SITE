@@ -21,13 +21,16 @@ import {
 import CoinIcon from '@/components/CoinIcon';
 
 // ============================================================================
-// InboxPage v5 — WhatsApp-Style Layout
+// InboxPage v6 — Native WhatsApp-Style Chat
 //
-// Wichtigste Änderung: Visual Viewport API
-// - window.visualViewport ändert sich wenn iOS-Tastatur auf/zu
-// - Wir setzen den Chat-Container auf exakt diese Höhe
-// - Header + Input bleiben damit IMMER sichtbar
-// - Body kann nicht scrollen wenn Chat offen ist
+// Lösung für iOS Safari Tastatur-Problem:
+//   1. Body wird komplett locked (position:fixed, no-scroll) wenn Chat offen
+//   2. Chat-Container nutzt visualViewport.height für seine Höhe
+//   3. Container wird visualViewport.offsetTop kompensiert
+//      → Verhindert dass iOS den Input automatisch ins Sichtbare schiebt
+//   4. Bei Tastatur-Öffnung: scrollIntoView auf letzte Nachricht
+//      → User sieht die neuesten Messages, nicht leeren Bereich
+//   5. Container bewegt sich NIE — nur die innere Höhe ändert sich
 // ============================================================================
 
 interface InboxPageProps {
@@ -60,14 +63,15 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     initialConversationId ? 'chat' : 'list'
   );
 
-  // === Viewport-Tracking für Tastatur ===
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  // Visual Viewport State — Höhe + offsetTop für iOS-Tastatur
+  const [vvHeight, setVvHeight] = useState<number | null>(null);
+  const [vvOffsetTop, setVvOffsetTop] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Redirect wenn nicht eingeloggt
   useEffect(() => {
     if (!getAccessToken()) {
       router.push('/login');
@@ -75,48 +79,92 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   }, [router]);
 
   // ===========================================================================
-  // VISUAL VIEWPORT TRACKING — Mobile-Tastatur-Handling
+  // VISUAL VIEWPORT — Höhe UND offsetTop tracken
   //
-  // iOS Safari ändert window.visualViewport.height wenn die Tastatur auf-/zugeht.
-  // Wir setzen die Chat-Container-Höhe darauf, damit Header + Input immer
-  // sichtbar bleiben (wie WhatsApp).
+  // iOS Safari Verhalten bei Tastatur:
+  //   - window.visualViewport.height schrumpft
+  //   - window.visualViewport.offsetTop wird > 0 wenn Page auto-scrolled wird
+  // 
+  // Mit beidem zusammen können wir den Container EXAKT positionieren und
+  // verhindern dass iOS uns die Page wegschiebt.
   // ===========================================================================
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!window.visualViewport) return;
 
-    function updateHeight() {
-      if (window.visualViewport) {
-        setViewportHeight(window.visualViewport.height);
-      }
+    function updateViewport() {
+      if (!window.visualViewport) return;
+      setVvHeight(window.visualViewport.height);
+      setVvOffsetTop(window.visualViewport.offsetTop);
     }
 
-    updateHeight();
-    window.visualViewport.addEventListener('resize', updateHeight);
-    window.visualViewport.addEventListener('scroll', updateHeight);
+    updateViewport();
+    window.visualViewport.addEventListener('resize', updateViewport);
+    window.visualViewport.addEventListener('scroll', updateViewport);
 
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateHeight);
-        window.visualViewport.removeEventListener('scroll', updateHeight);
-      }
+      if (!window.visualViewport) return;
+      window.visualViewport.removeEventListener('resize', updateViewport);
+      window.visualViewport.removeEventListener('scroll', updateViewport);
     };
   }, []);
 
-  // Beim Eintreten in den Chat: body scroll lockern damit Body nicht scrollt
+  // ===========================================================================
+  // BODY LOCK — Bei aktivem Chat
+  //
+  // Body wird auf fixed gesetzt damit iOS NICHT die ganze Page hoch-scrolled
+  // wenn der User ins Input klickt.
+  // ===========================================================================
   useEffect(() => {
     const isChatActive = !!activeId && mobileView === 'chat';
     if (!isChatActive) return;
 
-    const originalOverflow = document.body.style.overflow;
-    const originalPosition = document.body.style.position;
+    const scrollY = window.scrollY;
+    const originalStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
+
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
 
     return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.position = originalPosition;
+      document.body.style.overflow = originalStyle.overflow;
+      document.body.style.position = originalStyle.position;
+      document.body.style.top = originalStyle.top;
+      document.body.style.width = originalStyle.width;
+      window.scrollTo(0, scrollY);
     };
   }, [activeId, mobileView]);
+
+  // ===========================================================================
+  // AUTO-SCROLL bei neuen Messages + bei Tastatur-Open
+  // ===========================================================================
+  function scrollToBottom(smooth = false) {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
+  }
+
+  // Bei neuen Messages: instant scroll
+  useEffect(() => {
+    scrollToBottom(false);
+  }, [messages]);
+
+  // Bei Tastatur-Open (vvHeight ändert sich): scroll, damit letzte Messages sichtbar bleiben
+  useEffect(() => {
+    if (vvHeight === null) return;
+    // Kleiner Delay, damit das Layout sich neu rendert
+    const t = setTimeout(() => scrollToBottom(false), 50);
+    return () => clearTimeout(t);
+  }, [vvHeight]);
 
   // ===========================================================================
   // DATA LOADING
@@ -192,13 +240,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     return () => clearInterval(interval);
   }, [activeId, loadInbox]);
 
-  // Scroll-to-bottom bei neuen Nachrichten
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  }, [messages, viewportHeight]);
-
   useEffect(() => {
     if (initialConversationId && initialConversationId !== activeId) {
       setActiveId(initialConversationId);
@@ -213,6 +254,8 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   }
 
   function backToList() {
+    // Beim Verlassen: Input blurren damit Tastatur zugeht
+    if (composerRef.current) composerRef.current.blur();
     setMobileView('list');
     setActiveId(null);
     window.history.pushState(null, '', '/inbox');
@@ -270,27 +313,35 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   const canSend = balance !== null && balance >= messagePrice && text.trim().length > 0 && !sending;
   const isChatActive = !!activeId && mobileView === 'chat';
 
-  // Mobile Chat-Höhe: visualViewport.height oder fallback 100dvh
-  const mobileChatHeight = viewportHeight ? `${viewportHeight}px` : '100dvh';
-
   // ===========================================================================
-  // RENDER
+  // RENDER — Mobile Fullscreen Chat
   // ===========================================================================
-
-  // ===== MOBILE CHAT-VOLLBILD =====
-  // Wenn auf Mobile und Chat aktiv: fixed-fullscreen Layout mit Visual Viewport
   if (isChatActive) {
+    // Container Style:
+    //   - position: fixed (bleibt verankert)
+    //   - top: vvOffsetTop (kompensiert iOS Auto-Scroll)
+    //   - height: vvHeight (schrumpft mit Tastatur)
+    const mobileContainerStyle: React.CSSProperties = {
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      top: vvOffsetTop,
+      height: vvHeight ? `${vvHeight}px` : '100dvh',
+      zIndex: 50,
+    };
+
     return (
       <>
-        {/* DESKTOP: normale Inbox-Layout */}
+        {/* DESKTOP: normales Inbox-Layout */}
         <div className="hidden lg:flex flex-col h-dvh bg-zinc-50">
           {renderDesktopLayout()}
         </div>
 
-        {/* MOBILE: Fixed-Fullscreen Chat */}
+        {/* MOBILE: Fixed-Fullscreen Chat mit Visual-Viewport-Tracking */}
         <div
-          className="lg:hidden fixed inset-0 z-50 bg-white flex flex-col"
-          style={{ height: mobileChatHeight }}
+          ref={chatContainerRef}
+          className="lg:hidden bg-white flex flex-col"
+          style={mobileContainerStyle}
         >
           {activeDetail && renderChatContent(true)}
         </div>
@@ -298,10 +349,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     );
   }
 
-  // ===== NORMAL VIEW (Inbox-Liste oder Desktop) =====
+  // ===== NORMAL VIEW =====
   return (
     <div className="flex flex-col h-dvh bg-white lg:bg-zinc-50">
-      {/* Mobile Header oben (nur wenn nicht im Chat) */}
       <header className="lg:hidden shrink-0 bg-white border-b border-zinc-100 px-4 py-2.5 flex items-center justify-between">
         <Link href="/explore" className="inline-flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand-600" fill="currentColor">
@@ -326,7 +376,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   function renderDesktopLayout() {
     return (
       <div className="flex-1 flex max-w-7xl w-full mx-auto overflow-hidden">
-        {/* === LISTE === */}
         <aside className="w-full lg:w-[360px] lg:border-r border-zinc-200 bg-white flex flex-col">
           <div className="px-4 py-3 border-b border-zinc-100">
             <h1 className="font-display text-xl font-semibold tracking-tight">Nachrichten</h1>
@@ -394,7 +443,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
           </div>
         </aside>
 
-        {/* === CHAT (Desktop only — Mobile nutzt das Fullscreen-Layout oben) === */}
         <main className="hidden lg:flex flex-1 flex-col bg-zinc-50 min-w-0">
           {!activeId ? (
             <div className="flex-1 flex items-center justify-center p-8">
@@ -416,7 +464,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
     return (
       <>
-        {/* ============== CHAT-HEADER — sticky/fixed top ============== */}
+        {/* ============== CHAT-HEADER ============== */}
         <div className="shrink-0 px-3 sm:px-5 py-2.5 bg-white border-b border-zinc-200 flex items-center gap-3 z-10">
           <button
             onClick={backToList}
@@ -572,6 +620,11 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               ref={composerRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onFocus={() => {
+                // Beim Focus: scroll-to-bottom mit kleinem Delay (nach Layout-Update)
+                setTimeout(() => scrollToBottom(false), 150);
+                setTimeout(() => scrollToBottom(false), 350);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
