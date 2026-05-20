@@ -19,13 +19,20 @@ function Logo() {
 }
 
 // ============================================================================
-// BILDER-GALERIE — Native CSS Snap-Scroll + Pfeile Desktop
+// BILDER-GALERIE — Korrektes Touch-Verhalten
+// 
+// Lösung für den "Bild hängt"-Bug:
+//  - Galerie-Container ist horizontaler Scroll-Container mit scroll-snap
+//  - Bilder haben `draggable={false}` UND `pointer-events: none` 
+//    → Browser sieht sie nicht als interagierbar, kein Drag/Hänger
+//  - touch-action auf der Galerie ist `pan-x pan-y` (beides erlaubt)
+//    → Browser entscheidet anhand der Wischrichtung
+//  - Body kann normal vertikal scrollen
 // ============================================================================
 function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Aktiver Index via Scroll-Event
   function handleScroll() {
     if (!scrollerRef.current) return;
     const sc = scrollerRef.current;
@@ -54,27 +61,40 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
 
   return (
     <div className="relative group">
-      {/* Scroller */}
+      {/* Horizontal Scroll-Container — Scroll-Snap nur horizontal */}
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="snap-x-gallery flex overflow-x-auto aspect-[4/5] sm:aspect-[3/2] bg-zinc-100 rounded-t-2xl"
+        className="gallery-scroller flex overflow-x-auto overflow-y-hidden aspect-[4/5] sm:aspect-[3/2] bg-zinc-100 rounded-t-2xl"
+        style={{
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          overscrollBehaviorX: 'contain',
+          overscrollBehaviorY: 'auto',
+          touchAction: 'pan-x pan-y pinch-zoom',
+        }}
       >
         {images.map((src, i) => (
-          <div key={i} className="snap-center shrink-0 w-full h-full">
+          <div
+            key={i}
+            className="shrink-0 w-full h-full"
+            style={{ scrollSnapAlign: 'center', scrollSnapStop: 'always' }}
+          >
             <img
               src={src}
               alt={`${alt} – Bild ${i + 1}`}
-              className="w-full h-full object-cover"
+              draggable={false}
+              className="w-full h-full object-cover select-none pointer-events-none"
               loading={i === 0 ? 'eager' : 'lazy'}
             />
           </div>
         ))}
       </div>
 
-      {/* Indikator-Punkte */}
+      {/* Indikator-Punkte — tappable Navigation */}
       {images.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full z-10">
           {images.map((_, i) => (
             <button
               key={i}
@@ -92,18 +112,18 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
 
       {/* Bild-Counter oben rechts */}
       {images.length > 1 && (
-        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[11px] font-semibold px-2 py-1 rounded-full">
+        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-[11px] font-semibold px-2 py-1 rounded-full z-10">
           {activeIndex + 1} / {images.length}
         </div>
       )}
 
-      {/* Pfeile Desktop (versteckt Mobile) */}
+      {/* Pfeile Desktop only — versteckt Mobile */}
       {images.length > 1 && (
         <>
           {activeIndex > 0 && (
             <button
               onClick={prev}
-              className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"
               aria-label="Vorheriges Bild"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -114,7 +134,7 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
           {activeIndex < images.length - 1 && (
             <button
               onClick={next}
-              className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-white text-zinc-900 shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"
               aria-label="Nächstes Bild"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -129,7 +149,7 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
 }
 
 // ============================================================================
-// HELPER — Steckbrief-Kachel mit Icon
+// HELPER
 // ============================================================================
 function FactCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
@@ -141,9 +161,6 @@ function FactCard({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-// ============================================================================
-// HELPER — Detail-Zeile in "Über mich"
-// ============================================================================
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-zinc-100 last:border-b-0">
@@ -153,9 +170,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ============================================================================
-// HELPER — Tag-Pills (für was-ich-suche / antörnt / interessen)
-// ============================================================================
 function TagList({ tags, variant }: { tags: string[]; variant?: 'pink' | 'rose' | 'zinc' }) {
   const styles = {
     pink: 'bg-brand-50 text-brand-700 border-brand-100',
@@ -225,9 +239,6 @@ export default function ProfilDetailPage() {
     }
   }
 
-  // ===========================================================================
-  // LADE-ZUSTAND
-  // ===========================================================================
   if (loading) {
     return (
       <>
@@ -265,17 +276,11 @@ export default function ProfilDetailPage() {
     );
   }
 
-  // ===========================================================================
-  // PROFIL-DATEN AUSPACKEN
-  // ===========================================================================
   const pd = profile.profile_data || {};
   const images = profile.gallery_urls && profile.gallery_urls.length > 0
     ? profile.gallery_urls
     : (profile.avatar_url ? [profile.avatar_url] : []);
 
-  // ===========================================================================
-  // RENDER
-  // ===========================================================================
   return (
     <>
       {mounted && authed ? <AppHeader /> : (
@@ -292,7 +297,6 @@ export default function ProfilDetailPage() {
 
       <main className="min-h-screen bg-zinc-50 pb-32 sm:pb-12">
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-3 sm:pt-6">
-          {/* Zurück-Link */}
           <Link
             href="/explore"
             className="inline-flex items-center gap-1.5 text-sm text-zinc-600 hover:text-brand-600 transition-colors mb-3 sm:mb-4 px-1"
@@ -305,12 +309,12 @@ export default function ProfilDetailPage() {
           </Link>
 
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100">
-            {/* ============== BILDER-GALERIE ============== */}
+            {/* GALERIE */}
             <div className="relative">
               <PhotoGallery images={images} alt={profile.display_name} />
 
-              {/* Overlay-Badges */}
-              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
+              {/* Online-Badge */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 pointer-events-none">
                 <span className="flex items-center gap-1.5 bg-white/95 backdrop-blur text-zinc-800 text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -318,16 +322,9 @@ export default function ProfilDetailPage() {
                   </span>
                   Online
                 </span>
-                {profile.is_verified && (
-                  <span className="hidden sm:flex items-center gap-1 bg-blue-500/95 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9 5L5 5L5 9L2 12L5 15L5 19L9 19L12 22L15 19L19 19L19 15L22 12L19 9L19 5L15 5L12 2zM10 17L5 12L7 10L10 13L17 6L19 8L10 17z" /></svg>
-                    Verifiziert
-                  </span>
-                )}
               </div>
             </div>
 
-            {/* ============== HEADER (Name, Alter, Stadt) ============== */}
             <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4">
               <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-tight">
                 {profile.display_name}
@@ -343,7 +340,6 @@ export default function ProfilDetailPage() {
               )}
             </div>
 
-            {/* ============== BIO ============== */}
             {profile.bio && (
               <div className="px-5 sm:px-7 pb-5">
                 <p className="text-zinc-700 leading-relaxed text-[15px] whitespace-pre-wrap">
@@ -352,7 +348,7 @@ export default function ProfilDetailPage() {
               </div>
             )}
 
-            {/* ============== STECKBRIEF-KACHELN ============== */}
+            {/* STECKBRIEF */}
             <div className="px-5 sm:px-7 pb-5">
               <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-3">
                 Steckbrief
@@ -403,7 +399,6 @@ export default function ProfilDetailPage() {
               </div>
             </div>
 
-            {/* ============== ÜBER MICH ============== */}
             <div className="px-5 sm:px-7 pb-5">
               <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2">
                 Über mich
@@ -418,7 +413,6 @@ export default function ProfilDetailPage() {
               </div>
             </div>
 
-            {/* ============== WAS ICH SUCHE ============== */}
             {pd.looking_for && pd.looking_for.length > 0 && (
               <div className="px-5 sm:px-7 pb-5">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
@@ -428,7 +422,6 @@ export default function ProfilDetailPage() {
               </div>
             )}
 
-            {/* ============== WAS MICH ANTÖRNT ============== */}
             {pd.turn_ons && pd.turn_ons.length > 0 && (
               <div className="px-5 sm:px-7 pb-5">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
@@ -438,7 +431,6 @@ export default function ProfilDetailPage() {
               </div>
             )}
 
-            {/* ============== INTERESSEN ============== */}
             {pd.interests && pd.interests.length > 0 && (
               <div className="px-5 sm:px-7 pb-5">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2.5">
@@ -448,7 +440,6 @@ export default function ProfilDetailPage() {
               </div>
             )}
 
-            {/* ============== PERSÖNLICHKEIT (Freitext) ============== */}
             {pd.about_text && (
               <div className="px-5 sm:px-7 pb-6">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-2">
@@ -460,7 +451,6 @@ export default function ProfilDetailPage() {
               </div>
             )}
 
-            {/* ============== COIN-PREIS-BOX ============== */}
             <div className="mx-5 sm:mx-7 mb-5">
               <div className="flex items-center gap-3 bg-amber-50/60 border border-amber-200/50 rounded-xl p-3.5">
                 <div className="shrink-0">
@@ -477,7 +467,6 @@ export default function ProfilDetailPage() {
               </div>
             </div>
 
-            {/* ============== CTA Desktop (Mobile hat Sticky unten) ============== */}
             <div className="hidden sm:block px-7 pb-7">
               {authed ? (
                 <button
@@ -508,7 +497,6 @@ export default function ProfilDetailPage() {
           </div>
         </div>
 
-        {/* ============== MOBILE STICKY CTA ============== */}
         <div className="sm:hidden fixed inset-x-0 z-30 px-4 py-3 bg-white border-t border-zinc-200 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]"
              style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           {authed ? (
