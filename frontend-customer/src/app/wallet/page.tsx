@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getAccessToken,
   getWallet,
   getPackages,
   getPurchases,
   startPurchase,
   formatCents,
-  CoinPackage,
+  getAccessToken,
   APIError,
+  type CoinPackage,
 } from '@/lib/api';
-import { Header } from '@/components/Header';
+import AppHeader from '@/components/AppHeader';
 
 export default function WalletPage() {
   const router = useRouter();
@@ -20,225 +20,206 @@ export default function WalletPage() {
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [buying, setBuying] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getAccessToken()) {
-      router.replace('/login');
+      router.push('/login');
       return;
     }
-    loadData();
+    refresh();
+    // Refresh wenn der User vom Mock-Confirm-Tab zurückkommt
+    const onFocus = () => refresh();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, [router]);
 
-  async function loadData() {
-    setLoading(true);
+  async function refresh() {
     try {
-      const [w, p, pur] = await Promise.all([
+      const [walletRes, pkgRes, purchasesRes] = await Promise.all([
         getWallet(),
         getPackages(),
-        getPurchases(),
+        getPurchases().catch(() => ({ purchases: [] })),
       ]);
-      setBalance(w.balance_coins);
-      setPackages(p.packages);
-      setPurchases(pur.purchases);
+      setBalance(walletRes.balance_coins);
+      setPackages(pkgRes.packages);
+      setPurchases(purchasesRes.purchases);
     } catch (err) {
-      if (err instanceof APIError && err.status === 401) router.replace('/login');
+      if (err instanceof APIError && err.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleBuy(pkg: CoinPackage) {
-    setPurchasingId(pkg.id);
+  async function handleBuy(pkgId: string) {
+    setBuying(pkgId);
+    setError(null);
     try {
-      const resp = await startPurchase(pkg.id);
-      // Mock-Provider: öffne in neuem Tab, danach refresh
-      window.open(resp.redirect_url, '_blank', 'noopener,noreferrer');
-      // Nach kurzer Pause neu laden — der Mock-Endpoint completet sofort
-      setTimeout(() => {
-        loadData();
-        setPurchasingId(null);
-      }, 1500);
+      const res = await startPurchase(pkgId);
+      // Mock-Confirm-Tab öffnen
+      window.open(res.redirect_url, '_blank');
+      // Liste aktualisieren (pending Eintrag)
+      refresh();
     } catch (err) {
-      console.error(err);
-      alert('Kauf konnte nicht gestartet werden.');
-      setPurchasingId(null);
+      if (err instanceof APIError) {
+        setError(`Fehler: ${err.code}`);
+      } else {
+        setError('Verbindung fehlgeschlagen');
+      }
+    } finally {
+      setBuying(null);
     }
   }
 
+  // "Beliebt"-Paket: Mittel-Tier (500 Coins / Standard)
+  function isPopular(pkg: CoinPackage) {
+    return pkg.coins === 500;
+  }
+
+  // Bonus-Berechnung relativ zum Starter-Pack (100 Coins / 9.99€)
+  function getBonus(pkg: CoinPackage): number | null {
+    if (pkg.coins === 100) return null;
+    const basePricePerCoin = 9.99 / 100; // Starter-Referenz
+    const fairValue = pkg.coins * basePricePerCoin * 100;
+    const bonus = Math.round(((fairValue - pkg.price_cents) / pkg.price_cents) * 100);
+    return bonus > 0 ? bonus : null;
+  }
+
   return (
-    <div className="min-h-screen bg-mesh">
-      <Header />
+    <div className="min-h-screen bg-soft-gradient">
+      <AppHeader />
 
-      <main className="mx-auto max-w-5xl p-4 md:p-8">
-        {/* Balance Hero */}
-        <section className="mb-10 animate-fade-up">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 px-8 py-12 text-white shadow-pink-lg md:px-12">
-            <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
-            <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-brand-300/30 blur-3xl"></div>
-
-            <div className="relative">
-              <div className="text-sm font-medium uppercase tracking-wider text-white/70">
-                Aktuelles Guthaben
-              </div>
-              <div className="mt-2 flex items-baseline gap-3">
-                <span className="font-display text-7xl font-bold tracking-tight md:text-8xl">
-                  {balance ?? '…'}
-                </span>
-                <span className="text-xl font-semibold text-white/80">Coins</span>
-              </div>
-              <p className="mt-3 text-sm text-white/80">
-                Kaufe Coins, um Creators zu schreiben und exklusive Inhalte freizuschalten.
-              </p>
-            </div>
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {/* GUTHABEN-KARTE — kompakt */}
+        <section className="bg-gradient-to-br from-brand-500 to-brand-700 text-white rounded-2xl p-5 sm:p-6 shadow-pink-lg mb-6 sm:mb-8">
+          <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-80 mb-1.5">
+            Dein Guthaben
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-4xl sm:text-5xl font-semibold leading-none">
+              {loading ? '…' : balance}
+            </span>
+            <span className="text-base sm:text-lg opacity-90">Coins</span>
+          </div>
+          <div className="text-xs sm:text-sm opacity-85 mt-2">
+            Nutze Coins, um Nachrichten zu senden, Küsse zu verschicken und private Bilder freizuschalten.
           </div>
         </section>
 
-        {/* Coin Packages */}
-        <section className="mb-12">
-          <h2 className="mb-6 font-display text-2xl font-bold tracking-tight">Coins kaufen</h2>
+        {/* COIN-PAKETE */}
+        <section className="mb-8 sm:mb-12">
+          <h2 className="font-display text-xl sm:text-2xl font-semibold mb-4 sm:mb-5">
+            Coins kaufen
+          </h2>
+
+          {error && (
+            <div className="mb-4 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg">
+              {error}
+            </div>
+          )}
 
           {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-56 rounded-2xl bg-white border border-zinc-200 shimmer"></div>
+                <div key={i} className="aspect-[4/5] bg-zinc-200/60 animate-pulse rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {packages.map((pkg, i) => (
-                <PackageCard
-                  key={pkg.id}
-                  pkg={pkg}
-                  highlight={i === 1}
-                  loading={purchasingId === pkg.id}
-                  onBuy={() => handleBuy(pkg)}
-                  delay={i * 60}
-                />
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {packages.map((pkg) => {
+                const popular = isPopular(pkg);
+                const bonus = getBonus(pkg);
+                return (
+                  <div
+                    key={pkg.id}
+                    className={`
+                      relative bg-white rounded-xl p-3.5 sm:p-4 border transition-all
+                      ${popular ? 'border-brand-300 shadow-pink-lg' : 'border-zinc-200 hover:border-zinc-300'}
+                    `}
+                  >
+                    {popular && (
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap">
+                        ★ Beliebt
+                      </div>
+                    )}
+                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5 font-medium">
+                      {pkg.name}
+                    </div>
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <span className="font-display text-2xl sm:text-3xl font-semibold text-zinc-900 leading-none">
+                        {pkg.coins}
+                      </span>
+                      <span className="text-xs text-zinc-500">Coins</span>
+                    </div>
+                    {bonus && (
+                      <div className="text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded inline-block mb-2">
+                        +{bonus}% Bonus
+                      </div>
+                    )}
+                    <div className="text-sm sm:text-base font-semibold text-zinc-900 mb-3 mt-1">
+                      {formatCents(pkg.price_cents, pkg.currency)}
+                    </div>
+                    <button
+                      onClick={() => handleBuy(pkg.id)}
+                      disabled={buying === pkg.id}
+                      className={`
+                        w-full text-xs sm:text-sm font-semibold py-2 rounded-full transition-all
+                        ${popular
+                          ? 'bg-brand-600 text-white hover:bg-brand-700'
+                          : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                        }
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                      `}
+                    >
+                      {buying === pkg.id ? '…' : 'Kaufen'}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
 
-        {/* History */}
-        {!loading && purchases.length > 0 && (
-          <section className="animate-fade-up">
-            <h2 className="mb-4 font-display text-xl font-bold tracking-tight">Käufe</h2>
-            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">Paket</th>
-                    <th className="px-4 py-3 text-right font-medium">Coins</th>
-                    <th className="px-4 py-3 text-right font-medium">Preis</th>
-                    <th className="px-4 py-3 text-right font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {purchases.map((p) => (
-                    <tr key={p.id} className="hover:bg-zinc-50">
-                      <td className="px-4 py-3 font-medium">{p.package_name ?? '—'}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{p.coins}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-zinc-600">
-                        {formatCents(p.price_cents, p.currency)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <StatusBadge status={p.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* KÄUFE-HISTORIE */}
+        {purchases.length > 0 && (
+          <section>
+            <h2 className="font-display text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
+              Käufe
+            </h2>
+            <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+              <div className="hidden sm:grid grid-cols-4 gap-4 px-4 py-2.5 border-b border-zinc-100 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                <div>Paket</div>
+                <div>Coins</div>
+                <div>Preis</div>
+                <div className="text-right">Status</div>
+              </div>
+              {purchases.map((p, i) => (
+                <div
+                  key={p.id || i}
+                  className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 px-4 py-3 border-b border-zinc-50 last:border-b-0 text-sm items-center"
+                >
+                  <div className="font-medium text-zinc-900">{p.package_name || p.name || '—'}</div>
+                  <div className="text-zinc-700">{p.coins}</div>
+                  <div className="text-zinc-700 hidden sm:block">{formatCents(p.price_cents, p.currency)}</div>
+                  <div className="text-right">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      p.status === 'completed' ? 'bg-green-50 text-green-700' :
+                      p.status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                      'bg-zinc-100 text-zinc-600'
+                    }`}>
+                      {p.status === 'completed' ? 'Erhalten' :
+                       p.status === 'pending' ? 'Ausstehend' : p.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}
       </main>
     </div>
-  );
-}
-
-function PackageCard({
-  pkg,
-  highlight,
-  loading,
-  onBuy,
-  delay,
-}: {
-  pkg: CoinPackage;
-  highlight: boolean;
-  loading: boolean;
-  onBuy: () => void;
-  delay: number;
-}) {
-  const valuePerCoin = pkg.price_cents / pkg.coins; // cents per coin
-  const baseValue = 999 / 100; // Starter: 9,99€ für 100 = 0.0999 €/coin
-  const bonus = Math.round((1 - valuePerCoin / 9.99) * 100); // bonus % vs starter
-
-  return (
-    <div
-      className={[
-        'animate-fade-up relative flex flex-col overflow-hidden rounded-2xl border bg-white p-6 transition-all hover:-translate-y-1',
-        highlight
-          ? 'border-brand-300 shadow-pink ring-1 ring-brand-200'
-          : 'border-zinc-200 hover:shadow-lg hover:border-zinc-300',
-      ].join(' ')}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      {highlight && (
-        <div className="absolute -top-px left-1/2 -translate-x-1/2 rounded-b-lg bg-gradient-to-r from-brand-500 to-brand-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
-          ★ Beliebt
-        </div>
-      )}
-
-      <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-        {pkg.name}
-      </div>
-
-      <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="font-display text-4xl font-bold tracking-tight">{pkg.coins}</span>
-        <span className="text-sm font-medium text-zinc-500">Coins</span>
-      </div>
-
-      {bonus > 0 && (
-        <div className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-          +{bonus}% Bonus
-        </div>
-      )}
-
-      <div className="my-5 flex-1"></div>
-
-      <div className="mb-3 font-display text-2xl font-bold tracking-tight">
-        {formatCents(pkg.price_cents, pkg.currency)}
-      </div>
-
-      <button
-        onClick={onBuy}
-        disabled={loading}
-        className={[
-          'w-full rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50',
-          highlight
-            ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-pink hover:from-brand-600 hover:to-brand-700'
-            : 'bg-zinc-900 text-white hover:bg-zinc-700',
-        ].join(' ')}
-      >
-        {loading ? 'Lädt…' : 'Jetzt kaufen'}
-      </button>
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    completed: { label: 'Erhalten', cls: 'bg-emerald-50 text-emerald-700' },
-    pending:   { label: 'Ausstehend', cls: 'bg-amber-50 text-amber-700' },
-    failed:    { label: 'Fehlgeschlagen', cls: 'bg-red-50 text-red-700' },
-    refunded:  { label: 'Erstattet', cls: 'bg-zinc-100 text-zinc-700' },
-    chargeback: { label: 'Chargeback', cls: 'bg-red-50 text-red-700' },
-  };
-  const s = map[status] ?? { label: status, cls: 'bg-zinc-100 text-zinc-700' };
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>
-      {s.label}
-    </span>
   );
 }

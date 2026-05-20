@@ -24,26 +24,28 @@ interface InboxPageProps {
   initialConversationId?: string;
 }
 
+const SUGGESTIONS = [
+  'Hey, wie war dein Tag?',
+  'Was machst du gerade?',
+  'Du siehst sympathisch aus 😊',
+];
+
 export default function InboxPage({ initialConversationId }: InboxPageProps) {
   const router = useRouter();
 
-  // Listen-State
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingList, setLoadingList] = useState(true);
 
-  // Aktiver Chat
   const [activeId, setActiveId] = useState<string | null>(initialConversationId || null);
   const [activeDetail, setActiveDetail] = useState<ConversationDetail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingChat, setLoadingChat] = useState(false);
 
-  // Composer
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Mobile-State: zeigt entweder Liste oder Chat
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(
     initialConversationId ? 'chat' : 'list'
   );
@@ -51,16 +53,12 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auth-Check
   useEffect(() => {
     if (!getAccessToken()) {
       router.push('/login');
     }
   }, [router]);
 
-  // ============================================================================
-  // INITIAL LOAD + POLLING
-  // ============================================================================
   const loadInbox = useCallback(async () => {
     try {
       const res = await getInbox();
@@ -89,10 +87,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
       ]);
       setActiveDetail(detail);
       setMessages(msgs.messages);
-      // Als gelesen markieren
       if (detail.unread_count > 0) {
         await markConversationRead(id).catch(() => {});
-        loadInbox(); // Refresh Liste für Unread-Counter
+        loadInbox();
       }
     } catch (err) {
       console.error('Chat-Load Fehler:', err);
@@ -102,13 +99,11 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }, [loadInbox]);
 
-  // Initial: Liste + Balance laden
   useEffect(() => {
     loadInbox();
     loadBalance();
   }, [loadInbox, loadBalance]);
 
-  // Wenn activeId sich ändert: Chat laden
   useEffect(() => {
     if (activeId) {
       loadChat(activeId);
@@ -118,16 +113,13 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }, [activeId, loadChat]);
 
-  // Polling für Inbox + Messages alle 3 Sekunden
   useEffect(() => {
     const interval = setInterval(() => {
       loadInbox();
       if (activeId) {
-        // Nur Messages refreshen, nicht den Detail (sonst flackert)
         getMessages(activeId)
           .then((res) => {
             setMessages((prev) => {
-              // Nur updaten wenn sich was geändert hat (neue Nachrichten)
               if (res.messages.length !== prev.length) {
                 return res.messages;
               }
@@ -140,12 +132,10 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     return () => clearInterval(interval);
   }, [activeId, loadInbox]);
 
-  // Auto-scroll zum neuesten Message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // initialConversationId aus URL synchronisieren
   useEffect(() => {
     if (initialConversationId && initialConversationId !== activeId) {
       setActiveId(initialConversationId);
@@ -153,13 +143,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }, [initialConversationId, activeId]);
 
-  // ============================================================================
-  // ACTIONS
-  // ============================================================================
   function openChat(id: string) {
     setActiveId(id);
     setMobileView('chat');
-    // URL aktualisieren ohne Reload
     window.history.pushState(null, '', `/inbox/${id}`);
   }
 
@@ -169,14 +155,12 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     window.history.pushState(null, '', '/inbox');
   }
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!activeId || !text.trim() || sending) return;
+  async function handleSend(e: React.FormEvent | null, customText?: string) {
+    if (e) e.preventDefault();
+    const messageBody = (customText ?? text).trim();
+    if (!activeId || !messageBody || sending) return;
 
-    const messageBody = text.trim();
     const tempId = `temp_${Date.now()}`;
-
-    // Optimistic update: Nachricht sofort zeigen
     const optimistic: Message = {
       id: tempId,
       sender_role: 'customer',
@@ -188,28 +172,23 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
-    setText('');
+    if (!customText) setText('');
     setSending(true);
     setError(null);
 
     try {
       const res = await sendMessage(activeId, messageBody);
-      // Optimistic Nachricht durch echte ersetzen
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: res.id, sender_id: res.sender_id } : m))
       );
-      // Balance update
       if (res.balance_coins !== undefined) {
         setBalance(res.balance_coins);
       }
-      // Inbox-Liste refreshen (für last_message)
       loadInbox();
-      // Header refreshen
       window.dispatchEvent(new Event('app:refresh-balance'));
     } catch (err) {
-      // Optimistic-Nachricht entfernen
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      setText(messageBody); // User kann nochmal senden
+      if (!customText) setText(messageBody);
       if (err instanceof APIError) {
         if (err.code === 'insufficient_coins') {
           setError('Du hast nicht genug Coins. Lade auf, um weiterzuschreiben.');
@@ -225,9 +204,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
   const messagePrice = activeDetail?.message_price_coins || 0;
   const canSend = balance !== null && balance >= messagePrice && text.trim().length > 0 && !sending;
 
@@ -236,17 +212,15 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
       <AppHeader />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto overflow-hidden">
-        {/* ============================================ */}
-        {/* LISTE LINKS (Desktop immer, Mobile nur wenn view='list') */}
-        {/* ============================================ */}
+        {/* LISTE */}
         <aside
           className={`
-            w-full lg:w-[380px] lg:border-r border-zinc-200 bg-white flex flex-col
+            w-full lg:w-[360px] lg:border-r border-zinc-200 bg-white flex flex-col
             ${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'}
           `}
         >
-          <div className="px-4 sm:px-6 py-4 border-b border-zinc-100">
-            <h1 className="font-display text-2xl font-semibold tracking-tight">
+          <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-100">
+            <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight">
               Chats
             </h1>
           </div>
@@ -256,7 +230,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               <div className="p-4 space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-3 animate-pulse">
-                    <div className="w-12 h-12 rounded-full bg-zinc-200" />
+                    <div className="w-11 h-11 rounded-full bg-zinc-200" />
                     <div className="flex-1 space-y-2">
                       <div className="h-3 bg-zinc-200 rounded w-1/3" />
                       <div className="h-3 bg-zinc-200 rounded w-2/3" />
@@ -266,14 +240,14 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               </div>
             ) : conversations.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="text-5xl mb-3">💬</div>
-                <h2 className="font-semibold text-zinc-900 mb-2">Noch keine Chats</h2>
-                <p className="text-sm text-zinc-600 mb-4">
+                <div className="text-4xl mb-3">💬</div>
+                <h2 className="font-semibold text-zinc-900 mb-2 text-sm">Noch keine Chats</h2>
+                <p className="text-xs text-zinc-600 mb-4">
                   Schreibe eine Frau an, um ein Gespräch zu starten.
                 </p>
                 <Link
                   href="/explore"
-                  className="inline-block bg-brand-600 text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-brand-700 transition-colors"
+                  className="inline-block bg-brand-600 text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-brand-700 transition-colors"
                 >
                   Profile entdecken
                 </Link>
@@ -284,17 +258,17 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                   key={c.id}
                   onClick={() => openChat(c.id)}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors border-b border-zinc-100 text-left
+                    w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 transition-colors border-b border-zinc-100 text-left
                     ${activeId === c.id ? 'bg-brand-50/60' : ''}
                   `}
                 >
                   <div className="relative shrink-0">
                     {c.peer_avatar ? (
-                      <img src={c.peer_avatar} alt={c.peer_name} className="w-12 h-12 rounded-full object-cover" />
+                      <img src={c.peer_avatar} alt={c.peer_name} className="w-11 h-11 rounded-full object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-zinc-200" />
+                      <div className="w-11 h-11 rounded-full bg-zinc-200" />
                     )}
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -324,9 +298,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
           </div>
         </aside>
 
-        {/* ============================================ */}
-        {/* CHAT RECHTS (Desktop immer, Mobile nur wenn view='chat') */}
-        {/* ============================================ */}
+        {/* CHAT */}
         <main
           className={`
             flex-1 flex flex-col bg-zinc-50
@@ -336,24 +308,24 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
           {!activeId ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center text-zinc-500">
-                <div className="text-5xl mb-3">💬</div>
+                <div className="text-4xl mb-3">💬</div>
                 <p className="text-sm">Wähle einen Chat aus der Liste</p>
               </div>
             </div>
           ) : loadingChat && !activeDetail ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-7 h-7 border-3 border-brand-600 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : activeDetail ? (
             <>
               {/* Chat-Header */}
-              <div className="px-4 sm:px-6 py-3 bg-white border-b border-zinc-200 flex items-center gap-3">
+              <div className="px-3 sm:px-5 py-2.5 bg-white border-b border-zinc-200 flex items-center gap-2.5">
                 <button
                   onClick={backToList}
                   className="lg:hidden p-1 -ml-1 hover:bg-zinc-100 rounded-full"
                   aria-label="Zurück"
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
@@ -361,29 +333,56 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
                 <div className="relative shrink-0">
                   {activeDetail.peer_avatar ? (
-                    <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-9 h-9 rounded-full object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-zinc-200" />
+                    <div className="w-9 h-9 rounded-full bg-zinc-200" />
                   )}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 border-2 border-white" />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm sm:text-base truncate">{activeDetail.peer_name}</div>
-                  <div className="text-[11px] text-zinc-500 flex items-center gap-1">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500">
-                      <circle cx="12" cy="12" r="10" />
-                    </svg>
-                    {activeDetail.message_price_coins} Coins / Nachricht
+                  <div className="font-semibold text-sm truncate">{activeDetail.peer_name}</div>
+                  <div className="text-[10px] text-zinc-500">
+                    {activeDetail.message_price_coins} Coins pro Nachricht
                   </div>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-2">
+              <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 space-y-2">
                 {messages.length === 0 ? (
-                  <div className="text-center text-zinc-500 text-sm py-8">
-                    Sag „Hallo" 👋
+                  // EMPTY STATE — schön mit Vorschlägen
+                  <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
+                    <div className="relative mb-4">
+                      {activeDetail.peer_avatar ? (
+                        <img
+                          src={activeDetail.peer_avatar}
+                          alt={activeDetail.peer_name}
+                          className="w-20 h-20 rounded-full object-cover ring-4 ring-white shadow-pink"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-zinc-200" />
+                      )}
+                      <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                    </div>
+                    <h3 className="font-display text-lg font-semibold text-zinc-900 mb-1">
+                      Starte das Gespräch
+                    </h3>
+                    <p className="text-xs text-zinc-500 mb-5 max-w-xs">
+                      Sag kurz Hallo oder stelle {activeDetail.peer_name} eine persönliche Frage.
+                    </p>
+                    <div className="flex flex-col gap-2 w-full max-w-xs">
+                      {SUGGESTIONS.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSend(null, s)}
+                          disabled={sending || balance === null || balance < messagePrice}
+                          className="text-left text-sm bg-white border border-zinc-200 hover:border-brand-300 hover:bg-brand-50/50 rounded-2xl px-4 py-2.5 text-zinc-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   messages.map((m, i) => {
@@ -397,15 +396,15 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                         className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
                       >
                         {!isUser && (
-                          <div className="w-7 shrink-0">
+                          <div className="w-6 shrink-0">
                             {showAvatar && activeDetail.peer_avatar && (
-                              <img src={activeDetail.peer_avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+                              <img src={activeDetail.peer_avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
                             )}
                           </div>
                         )}
                         <div
                           className={`
-                            max-w-[75%] sm:max-w-[65%] px-3.5 py-2 rounded-2xl
+                            max-w-[78%] sm:max-w-[65%] px-3.5 py-2 rounded-2xl
                             ${isUser
                               ? 'bg-brand-600 text-white rounded-br-sm'
                               : 'bg-white text-zinc-900 rounded-bl-sm border border-zinc-200'
@@ -413,7 +412,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                           `}
                         >
                           <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</div>
-                          <div className={`text-[10px] mt-1 ${isUser ? 'text-pink-100' : 'text-zinc-500'}`}>
+                          <div className={`text-[10px] mt-0.5 ${isUser ? 'text-pink-100' : 'text-zinc-500'}`}>
                             {formatMessageTime(m.created_at)}
                           </div>
                         </div>
@@ -425,7 +424,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
               </div>
 
               {/* Composer */}
-              <div className="bg-white border-t border-zinc-200 px-3 sm:px-4 py-3">
+              <div className="bg-white border-t border-zinc-200 px-3 sm:px-4 py-2.5">
                 {error && (
                   <div className="mb-2 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg flex items-center justify-between gap-2">
                     <span>{error}</span>
@@ -437,7 +436,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                   </div>
                 )}
 
-                <form onSubmit={handleSend} className="flex items-end gap-2">
+                <form onSubmit={(e) => handleSend(e)} className="flex items-end gap-2">
                   <textarea
                     ref={composerRef}
                     value={text}
@@ -450,22 +449,22 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                     }}
                     placeholder="Nachricht schreiben…"
                     rows={1}
-                    className="flex-1 resize-none rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:bg-white focus:outline-none transition-all max-h-32"
+                    className="flex-1 resize-none rounded-2xl border border-zinc-300 bg-zinc-50 px-3.5 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:bg-white focus:outline-none transition-all max-h-32"
                     style={{
-                      minHeight: '40px',
-                      height: Math.min(40 + Math.floor((text.length - 1) / 50) * 20, 128) + 'px',
+                      minHeight: '36px',
+                      height: Math.min(36 + Math.floor((text.length - 1) / 50) * 20, 128) + 'px',
                     }}
                   />
                   <button
                     type="submit"
                     disabled={!canSend}
-                    className="shrink-0 w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    className="shrink-0 w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     aria-label="Senden"
                   >
                     {sending ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
                       </svg>
@@ -473,11 +472,11 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                   </button>
                 </form>
 
-                <div className="mt-1.5 flex items-center justify-between text-[10px] text-zinc-500">
-                  <span>Senden kostet <span className="font-semibold text-amber-700">{messagePrice} Coins</span></span>
+                <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
+                  <span>{messagePrice} Coins pro Nachricht</span>
                   {balance !== null && (
                     <span>
-                      Du hast <span className="font-semibold text-amber-700">{balance}</span>
+                      Du hast <span className="font-semibold text-brand-700">{balance}</span> Coins
                       {balance < messagePrice && (
                         <Link href="/wallet" className="ml-2 text-brand-600 hover:underline font-semibold">
                           Aufladen →
