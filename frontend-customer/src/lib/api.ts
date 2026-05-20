@@ -185,6 +185,106 @@ export async function startPurchase(packageId: string): Promise<PurchaseResponse
   });
 }
 
+// === Creators (Public) ===
+
+export interface Creator {
+  user_id: string;
+  handle: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  message_price_coins: number;
+  is_verified: boolean;
+}
+
+export async function listCreators(): Promise<{ creators: Creator[] }> {
+  return api('/api/creators');
+}
+
+export async function getCreatorByHandle(handle: string): Promise<Creator> {
+  return api(`/api/creators/${handle}`);
+}
+
+// === Chat / Conversations ===
+
+export interface Conversation {
+  id: string;
+  peer_id: string;
+  peer_name: string;
+  peer_handle: string | null;
+  peer_avatar: string | null;
+  last_message_preview: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  is_blocked: boolean;
+}
+
+export interface ConversationDetail {
+  id: string;
+  creator_user_id: string;
+  customer_user_id: string;
+  peer_name: string;
+  peer_handle: string | null;
+  peer_avatar: string | null;
+  peer_bio: string | null;
+  message_price_coins: number;
+  unread_count: number;
+  is_blocked: boolean;
+}
+
+export interface Message {
+  id: string;
+  sender_role: 'creator' | 'customer' | 'system';
+  sender_id: string;
+  msg_type: 'text' | 'media' | 'system_notice';
+  body: string | null;
+  coin_cost: number;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface SendMessageResponse {
+  id: string;
+  sender_role: 'creator' | 'customer';
+  sender_id: string;
+  body: string;
+  coin_cost: number;
+  created_at: string;
+  balance_coins?: number; // nur bei customer-send
+}
+
+export async function getInbox(): Promise<{ conversations: Conversation[] }> {
+  return api('/api/conversations/');
+}
+
+export async function createConversation(creatorUserId: string): Promise<{ id: string; creator_user_id: string }> {
+  return api('/api/conversations/', {
+    method: 'POST',
+    body: JSON.stringify({ creator_user_id: creatorUserId }),
+  });
+}
+
+export async function getConversation(conversationId: string): Promise<ConversationDetail> {
+  return api(`/api/conversations/${conversationId}`);
+}
+
+export async function getMessages(conversationId: string, before?: string): Promise<{ messages: Message[] }> {
+  const qs = before ? `?before=${encodeURIComponent(before)}` : '';
+  return api(`/api/conversations/${conversationId}/messages${qs}`);
+}
+
+export async function sendMessage(conversationId: string, body: string): Promise<SendMessageResponse> {
+  return api(`/api/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
+}
+
+export async function markConversationRead(conversationId: string): Promise<void> {
+  return api(`/api/conversations/${conversationId}/read`, { method: 'POST' });
+}
+
 // === Helpers ===
 
 export function formatCents(cents: number, currency: string = 'EUR'): string {
@@ -192,4 +292,24 @@ export function formatCents(cents: number, currency: string = 'EUR'): string {
     style: 'currency',
     currency,
   }).format(cents / 100);
+}
+
+export function formatTime(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = Date.now();
+  const diff = now - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'gerade eben';
+  if (minutes < 60) return `vor ${minutes} Min.`;
+  if (hours < 24) return `vor ${hours} Std.`;
+  if (days < 7) return `vor ${days} ${days === 1 ? 'Tag' : 'Tagen'}`;
+  return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+}
+
+export function formatMessageTime(timestamp: string): string {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }

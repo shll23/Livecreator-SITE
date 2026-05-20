@@ -3,12 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { getCoinBalance } from '@/lib/chatStore';
-import { getInbox } from '@/lib/chatStore';
-import { logout } from '@/lib/api';
+import { getWallet, getInbox, logout, getAccessToken } from '@/lib/api';
 
 // ============================================================================
-// LOGO (geteilt mit anderen Seiten)
+// LOGO
 // ============================================================================
 function Logo() {
   return (
@@ -23,46 +21,44 @@ function Logo() {
   );
 }
 
-// ============================================================================
-// APP HEADER
-// ============================================================================
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [coins, setCoins] = useState(0);
+  const [coins, setCoins] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Initial Load + Listener für Coin-Updates
   useEffect(() => {
     setMounted(true);
-    setCoins(getCoinBalance());
-    setUnreadCount(getInbox().reduce((sum, c) => sum + c.unreadCount, 0));
-
-    const onCoinsChange = (e: any) => setCoins(e.detail);
-    const onMessageNew = () => {
-      setUnreadCount(getInbox().reduce((sum, c) => sum + c.unreadCount, 0));
-    };
-
-    window.addEventListener('coins:changed', onCoinsChange);
-    window.addEventListener('message:new', onMessageNew);
-
-    // Polling alle 2s als Backup (für andere Tabs)
-    const interval = setInterval(() => {
-      setCoins(getCoinBalance());
-      setUnreadCount(getInbox().reduce((sum, c) => sum + c.unreadCount, 0));
-    }, 2000);
-
+    refreshData();
+    const interval = setInterval(refreshData, 5000);
+    const onRefresh = () => refreshData();
+    window.addEventListener('app:refresh-balance', onRefresh);
+    window.addEventListener('app:refresh-inbox', onRefresh);
     return () => {
-      window.removeEventListener('coins:changed', onCoinsChange);
-      window.removeEventListener('message:new', onMessageNew);
       clearInterval(interval);
+      window.removeEventListener('app:refresh-balance', onRefresh);
+      window.removeEventListener('app:refresh-inbox', onRefresh);
     };
   }, []);
 
-  // Menu beim Klick außerhalb schließen
+  async function refreshData() {
+    if (!getAccessToken()) return;
+    try {
+      const [walletRes, inboxRes] = await Promise.all([
+        getWallet().catch(() => null),
+        getInbox().catch(() => null),
+      ]);
+      if (walletRes) setCoins(walletRes.balance_coins);
+      if (inboxRes) {
+        const total = inboxRes.conversations.reduce((sum, c) => sum + c.unread_count, 0);
+        setUnreadCount(total);
+      }
+    } catch {}
+  }
+
   useEffect(() => {
     if (!menuOpen) return;
     const close = () => setMenuOpen(false);
@@ -71,35 +67,26 @@ export default function AppHeader() {
   }, [menuOpen]);
 
   async function handleLogout() {
-    try {
-      await logout();
-    } catch {}
-    // Lokalen Chat-Store nicht löschen — User kann sich wieder einloggen
+    try { await logout(); } catch {}
     router.push('/login');
   }
 
-  // Aktive Route Highlighting
   const isExplore = pathname?.startsWith('/explore');
   const isInbox = pathname?.startsWith('/inbox');
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-zinc-200/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-        {/* LOGO */}
         <Link href="/explore" aria-label="Zur Startseite">
           <Logo />
         </Link>
 
-        {/* RECHTS — Nav + Coins + Avatar */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {/* Nav-Links (Desktop) */}
           <nav className="hidden sm:flex items-center gap-1 mr-2">
             <Link
               href="/explore"
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                isExplore
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-zinc-600 hover:text-brand-600 hover:bg-zinc-50'
+                isExplore ? 'bg-brand-50 text-brand-700' : 'text-zinc-600 hover:text-brand-600 hover:bg-zinc-50'
               }`}
             >
               Entdecken
@@ -107,9 +94,7 @@ export default function AppHeader() {
             <Link
               href="/inbox"
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                isInbox
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-zinc-600 hover:text-brand-600 hover:bg-zinc-50'
+                isInbox ? 'bg-brand-50 text-brand-700' : 'text-zinc-600 hover:text-brand-600 hover:bg-zinc-50'
               }`}
             >
               Chats
@@ -121,22 +106,20 @@ export default function AppHeader() {
             </Link>
           </nav>
 
-          {/* Coin-Balance */}
           <Link
             href="/wallet"
             className="flex items-center gap-1.5 bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200/60 px-2.5 sm:px-3.5 py-1.5 rounded-full hover:from-amber-100 hover:to-yellow-100 transition-all"
+            aria-label="Coins kaufen"
           >
-            {/* Coin-Icon */}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500 sm:w-4 sm:h-4">
+            <svg width="14" height="14" viewBox="0 0 24 24" className="text-amber-500 sm:w-4 sm:h-4" fill="currentColor">
               <circle cx="12" cy="12" r="10" />
               <text x="12" y="16" fontSize="10" fontWeight="bold" textAnchor="middle" fill="white">€</text>
             </svg>
             <span className="text-sm sm:text-base font-bold text-amber-700 tabular-nums">
-              {mounted ? coins : '...'}
+              {mounted && coins !== null ? coins : '…'}
             </span>
           </Link>
 
-          {/* Inbox-Icon (nur Mobile, da im Nav versteckt) */}
           <Link
             href="/inbox"
             className="sm:hidden relative p-2 rounded-full hover:bg-zinc-100 transition-colors"
@@ -152,7 +135,6 @@ export default function AppHeader() {
             )}
           </Link>
 
-          {/* Avatar / Menu */}
           <div className="relative">
             <button
               onClick={(e) => {
@@ -169,10 +151,7 @@ export default function AppHeader() {
 
             {menuOpen && (
               <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-zinc-200/60 overflow-hidden animate-fade-up">
-                <Link
-                  href="/wallet"
-                  className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100"
-                >
+                <Link href="/wallet" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
                     <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
@@ -180,20 +159,14 @@ export default function AppHeader() {
                   </svg>
                   Coins kaufen
                 </Link>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100"
-                >
+                <Link href="/settings" className="flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border-b border-zinc-100">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
                   Einstellungen
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left"
-                >
+                <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-zinc-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
