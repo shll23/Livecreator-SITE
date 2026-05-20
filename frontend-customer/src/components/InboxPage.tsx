@@ -18,8 +18,18 @@ import {
   type ConversationDetail,
   type Message,
 } from '@/lib/api';
-import AppHeader from '@/components/AppHeader';
 import CoinIcon from '@/components/CoinIcon';
+
+// ============================================================================
+// InboxPage — Premium-Mobile-Chat
+//
+// Ziele:
+//  - Native App-Anmutung
+//  - Chat-Start bleibt UNTEN (kein künstlich nach oben gezogen)
+//  - Input-Bar stabil fixed mit Safe-Area
+//  - Keine Preis/Guthaben-Leiste mehr unten
+//  - Saubere Cross-Browser-Stabilität
+// ============================================================================
 
 interface InboxPageProps {
   initialConversationId?: string;
@@ -54,12 +64,16 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
+  // Redirect wenn nicht eingeloggt
   useEffect(() => {
     if (!getAccessToken()) {
       router.push('/login');
     }
   }, [router]);
 
+  // ===========================================================================
+  // DATA LOADING
+  // ===========================================================================
   const loadInbox = useCallback(async () => {
     try {
       const res = await getInbox();
@@ -114,6 +128,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     }
   }, [activeId, loadChat]);
 
+  // Polling für neue Nachrichten
   useEffect(() => {
     const interval = setInterval(() => {
       loadInbox();
@@ -121,9 +136,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
         getMessages(activeId)
           .then((res) => {
             setMessages((prev) => {
-              if (res.messages.length !== prev.length) {
-                return res.messages;
-              }
+              if (res.messages.length !== prev.length) return res.messages;
               return prev;
             });
           })
@@ -133,10 +146,12 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     return () => clearInterval(interval);
   }, [activeId, loadInbox]);
 
+  // Scroll-to-bottom bei neuen Nachrichten
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // URL-Sync
   useEffect(() => {
     if (initialConversationId && initialConversationId !== activeId) {
       setActiveId(initialConversationId);
@@ -156,6 +171,9 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     window.history.pushState(null, '', '/inbox');
   }
 
+  // ===========================================================================
+  // SEND MESSAGE (Optimistic UI)
+  // ===========================================================================
   async function handleSend(e: React.FormEvent | null, customText?: string) {
     if (e) e.preventDefault();
     const messageBody = (customText ?? text).trim();
@@ -192,7 +210,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
       if (!customText) setText(messageBody);
       if (err instanceof APIError) {
         if (err.code === 'insufficient_coins') {
-          setError('Du hast nicht genug Coins. Lade auf, um weiterzuschreiben.');
+          setError('Du hast nicht genug Coins. Lade dein Guthaben auf.');
         } else {
           setError(`Fehler: ${err.code}`);
         }
@@ -207,23 +225,54 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
   const messagePrice = activeDetail?.message_price_coins || 0;
   const canSend = balance !== null && balance >= messagePrice && text.trim().length > 0 && !sending;
+  const isChatActive = !!activeId && mobileView === 'chat';
 
+  // ===========================================================================
+  // RENDER
+  // ===========================================================================
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col">
-      <AppHeader />
+    <div className="flex flex-col h-dvh bg-white lg:bg-zinc-50">
+      {/* =======================================================
+          MOBILE HEADER (nur sichtbar Mobile, nicht im Chat-Vollbild)
+          ======================================================= */}
+      {!isChatActive && (
+        <header className="lg:hidden shrink-0 bg-white border-b border-zinc-100 px-4 py-2.5 flex items-center justify-between">
+          <Link href="/explore" className="inline-flex items-center gap-1.5">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand-600" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            <span className="font-display text-base font-semibold tracking-tight text-zinc-900">
+              verliebdich
+            </span>
+          </Link>
 
+          {/* Dezente Coin-Pille rechts */}
+          <Link
+            href="/wallet"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200/70 bg-white hover:bg-amber-50/40 transition-colors"
+            aria-label="Coins kaufen"
+          >
+            <CoinIcon size={12} />
+            <span className="text-[11px] font-semibold text-zinc-700 tabular-nums">
+              {balance !== null ? balance : '…'}
+            </span>
+          </Link>
+        </header>
+      )}
+
+      {/* =======================================================
+          BODY: Liste + Chat
+          ======================================================= */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto overflow-hidden">
-        {/* LISTE */}
+        {/* === LISTE === */}
         <aside
           className={`
             w-full lg:w-[360px] lg:border-r border-zinc-200 bg-white flex flex-col
             ${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'}
           `}
         >
-          <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-zinc-100">
-            <h1 className="font-display text-xl sm:text-2xl font-semibold tracking-tight">
-              Nachrichten
-            </h1>
+          <div className="px-4 py-3 border-b border-zinc-100">
+            <h1 className="font-display text-xl font-semibold tracking-tight">Nachrichten</h1>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -299,10 +348,10 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
           </div>
         </aside>
 
-        {/* CHAT */}
+        {/* === CHAT === */}
         <main
           className={`
-            flex-1 flex flex-col bg-zinc-50
+            flex-1 flex flex-col bg-white lg:bg-zinc-50 min-w-0
             ${mobileView === 'list' ? 'hidden lg:flex' : 'flex'}
           `}
         >
@@ -319,11 +368,13 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
             </div>
           ) : activeDetail ? (
             <>
-              {/* Chat-Header */}
-              <div className="px-3 sm:px-5 py-2.5 bg-white border-b border-zinc-200 flex items-center gap-2.5">
+              {/* =================================================
+                  CHAT-HEADER (clean, dezent)
+                  ================================================= */}
+              <div className="shrink-0 px-3 sm:px-5 py-2 bg-white border-b border-zinc-200 flex items-center gap-2.5">
                 <button
                   onClick={backToList}
-                  className="lg:hidden p-1 -ml-1 hover:bg-zinc-100 rounded-full"
+                  className="lg:hidden p-1.5 -ml-1 hover:bg-zinc-100 active:bg-zinc-200 rounded-full transition-colors"
                   aria-label="Zurück"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -342,102 +393,132 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{activeDetail.peer_name}</div>
-                  <div className="text-[10px] text-zinc-500 flex items-center gap-1">
-                    <CoinIcon size={9} />
-                    {activeDetail.message_price_coins} pro Nachricht
-                  </div>
+                  <div className="font-semibold text-sm truncate text-zinc-900">{activeDetail.peer_name}</div>
+                  <div className="text-[10px] text-green-600 font-medium">Online</div>
                 </div>
+
+                {/* Dezente Coin-Pille rechts */}
+                <Link
+                  href="/wallet"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200/70 bg-white hover:bg-amber-50/40 transition-colors shrink-0"
+                  aria-label="Coins kaufen"
+                >
+                  <CoinIcon size={12} />
+                  <span className="text-[11px] font-semibold text-zinc-700 tabular-nums">
+                    {balance !== null ? balance : '…'}
+                  </span>
+                </Link>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 space-y-2">
+              {/* =================================================
+                  CHAT-INHALT
+                  WICHTIG: Bei leerem Chat → Empty-State UNTEN
+                  Bei Nachrichten → normal scrollen
+                  ================================================= */}
+              <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
                 {messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full px-4 py-8 text-center">
-                    <div className="relative mb-4">
-                      {activeDetail.peer_avatar ? (
-                        <img
-                          src={activeDetail.peer_avatar}
-                          alt={activeDetail.peer_name}
-                          className="w-20 h-20 rounded-full object-cover ring-4 ring-white shadow-pink"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-zinc-200" />
-                      )}
-                      <span className="absolute bottom-1 right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
-                    </div>
-                    <h3 className="font-display text-lg font-semibold text-zinc-900 mb-1">
-                      Starte das Gespräch
-                    </h3>
-                    <p className="text-xs text-zinc-500 mb-5 max-w-xs">
-                      Sag kurz Hallo oder stelle {activeDetail.peer_name} eine persönliche Frage.
-                    </p>
-                    <div className="flex flex-col gap-2 w-full max-w-xs">
-                      {SUGGESTIONS.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSend(null, s)}
-                          disabled={sending || balance === null || balance < messagePrice}
-                          className="text-left text-sm bg-white border border-zinc-200 hover:border-brand-300 hover:bg-brand-50/50 rounded-2xl px-4 py-2.5 text-zinc-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {s}
-                        </button>
-                      ))}
+                  // EMPTY STATE — Container füllt den Raum, Inhalt UNTEN
+                  <div className="min-h-full flex flex-col justify-end px-5 pb-5 pt-8">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="relative mb-3">
+                        {activeDetail.peer_avatar ? (
+                          <img
+                            src={activeDetail.peer_avatar}
+                            alt={activeDetail.peer_name}
+                            className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-zinc-200" />
+                        )}
+                        <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                      </div>
+                      <h3 className="font-display text-base font-semibold text-zinc-900 mb-0.5">
+                        Starte das Gespräch
+                      </h3>
+                      <p className="text-xs text-zinc-500 mb-4 max-w-xs">
+                        Sag kurz Hallo oder stelle {activeDetail.peer_name} eine persönliche Frage.
+                      </p>
+
+                      {/* Vorschlag-Buttons — elegant, flach */}
+                      <div className="flex flex-col gap-1.5 w-full max-w-[280px]">
+                        {SUGGESTIONS.map((s, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSend(null, s)}
+                            disabled={sending || balance === null || balance < messagePrice}
+                            className="tap-shrink text-left text-[13px] bg-white border border-zinc-200 hover:border-zinc-300 active:bg-zinc-50 rounded-xl px-3.5 py-2 text-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  messages.map((m, i) => {
-                    const isUser = m.sender_role === 'customer';
-                    const prevMsg = i > 0 ? messages[i - 1] : null;
-                    const showAvatar = !isUser && (!prevMsg || prevMsg.sender_role !== m.sender_role);
+                  <div className="px-3 sm:px-5 py-3 space-y-2">
+                    {messages.map((m, i) => {
+                      const isUser = m.sender_role === 'customer';
+                      const prevMsg = i > 0 ? messages[i - 1] : null;
+                      const showAvatar = !isUser && (!prevMsg || prevMsg.sender_role !== m.sender_role);
 
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
-                      >
-                        {!isUser && (
-                          <div className="w-6 shrink-0">
-                            {showAvatar && activeDetail.peer_avatar && (
-                              <img src={activeDetail.peer_avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
-                            )}
-                          </div>
-                        )}
+                      return (
                         <div
-                          className={`
-                            max-w-[78%] sm:max-w-[65%] px-3.5 py-2 rounded-2xl
-                            ${isUser
-                              ? 'bg-brand-600 text-white rounded-br-sm'
-                              : 'bg-white text-zinc-900 rounded-bl-sm border border-zinc-200'
-                            }
-                          `}
+                          key={m.id}
+                          className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</div>
-                          <div className={`text-[10px] mt-0.5 ${isUser ? 'text-pink-100' : 'text-zinc-500'}`}>
-                            {formatMessageTime(m.created_at)}
+                          {!isUser && (
+                            <div className="w-6 shrink-0">
+                              {showAvatar && activeDetail.peer_avatar && (
+                                <img src={activeDetail.peer_avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                              )}
+                            </div>
+                          )}
+                          <div
+                            className={`
+                              max-w-[78%] sm:max-w-[65%] px-3.5 py-2 rounded-2xl
+                              ${isUser
+                                ? 'bg-brand-600 text-white rounded-br-sm'
+                                : 'bg-white text-zinc-900 rounded-bl-sm border border-zinc-200'
+                              }
+                            `}
+                          >
+                            <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</div>
+                            <div className={`text-[10px] mt-0.5 ${isUser ? 'text-pink-100' : 'text-zinc-500'}`}>
+                              {formatMessageTime(m.created_at)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
-              {/* Composer */}
-              <div className="bg-white border-t border-zinc-200 px-3 sm:px-4 py-2.5">
+              {/* =================================================
+                  INPUT-BAR — fixed unten, sauber
+                  - Safe-Area beachtet
+                  - Nur Input + Send-Button
+                  - KEINE Preis/Guthaben-Infos mehr
+                  ================================================= */}
+              <div
+                className="shrink-0 bg-white border-t border-zinc-200"
+                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+              >
                 {error && (
-                  <div className="mb-2 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg flex items-center justify-between gap-2">
-                    <span>{error}</span>
-                    {error.includes('Coins') && (
-                      <Link href="/wallet" className="font-semibold underline whitespace-nowrap">
-                        Aufladen
-                      </Link>
-                    )}
+                  <div className="px-3 pt-2 pb-1.5">
+                    <div className="px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg flex items-center justify-between gap-2">
+                      <span>{error}</span>
+                      {error.toLowerCase().includes('coins') && (
+                        <Link href="/wallet" className="font-semibold underline whitespace-nowrap shrink-0">
+                          Aufladen
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                <form onSubmit={(e) => handleSend(e)} className="flex items-end gap-2">
+                <form onSubmit={(e) => handleSend(e)} className="flex items-end gap-2 px-3 py-2">
                   <textarea
                     ref={composerRef}
                     value={text}
@@ -450,16 +531,12 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                     }}
                     placeholder="Nachricht schreiben…"
                     rows={1}
-                    className="flex-1 resize-none rounded-2xl border border-zinc-300 bg-zinc-50 px-3.5 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:bg-white focus:outline-none transition-all max-h-32"
-                    style={{
-                      minHeight: '36px',
-                      height: Math.min(36 + Math.floor((text.length - 1) / 50) * 20, 128) + 'px',
-                    }}
+                    className="flex-1 resize-none rounded-2xl border border-zinc-300 bg-zinc-50 px-3.5 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-100 focus:bg-white focus:outline-none transition-all max-h-32 min-h-[36px]"
                   />
                   <button
                     type="submit"
                     disabled={!canSend}
-                    className="shrink-0 w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    className="shrink-0 w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     aria-label="Senden"
                   >
                     {sending ? (
@@ -472,25 +549,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                     )}
                   </button>
                 </form>
-
-                <div className="mt-1 flex items-center justify-between text-[10px] text-zinc-500">
-                  <span className="flex items-center gap-1">
-                    <CoinIcon size={10} />
-                    {messagePrice} pro Nachricht
-                  </span>
-                  {balance !== null && (
-                    <span className="flex items-center gap-1">
-                      Guthaben:
-                      <CoinIcon size={10} />
-                      <span className="font-semibold text-zinc-800">{balance}</span>
-                      {balance < messagePrice && (
-                        <Link href="/wallet" className="ml-2 text-brand-600 hover:underline font-semibold">
-                          Aufladen →
-                        </Link>
-                      )}
-                    </span>
-                  )}
-                </div>
               </div>
             </>
           ) : null}
