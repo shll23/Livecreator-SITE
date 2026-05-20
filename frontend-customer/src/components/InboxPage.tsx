@@ -241,11 +241,12 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   }, [activeId, loadInbox]);
 
   useEffect(() => {
-    if (initialConversationId && initialConversationId !== activeId) {
+    if (initialConversationId) {
       setActiveId(initialConversationId);
       setMobileView('chat');
     }
-  }, [initialConversationId, activeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialConversationId]);
 
   function openChat(id: string) {
     setActiveId(id);
@@ -258,7 +259,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
     if (composerRef.current) composerRef.current.blur();
     setMobileView('list');
     setActiveId(null);
-    window.history.pushState(null, '', '/inbox');
+    router.push('/inbox');
   }
 
   async function handleSend(e: React.FormEvent | null, customText?: string) {
