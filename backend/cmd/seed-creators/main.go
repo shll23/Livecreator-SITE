@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -286,28 +287,37 @@ func buildSeedData() []CreatorSeed {
 // UPSERT
 // ============================================================================
 func upsertCreator(ctx context.Context, pool *pgxpool.Pool, c CreatorSeed) error {
+	// 1) Vor-Check: Existiert der User? (Außerhalb jeder Transaktion damit ein
+	//    "no rows" Fehler nicht den ganzen TX-Block ungültig macht)
+	var userID string
+	err := pool.QueryRow(ctx, `SELECT id FROM users WHERE email_norm = LOWER($1)`, c.Email).Scan(&userID)
+
+	// pgx liefert pgx.ErrNoRows bei nicht-vorhandenem Datensatz
+	userExists := err == nil
+	if err != nil && err != pgx.ErrNoRows {
+		return fmt.Errorf("check user: %w", err)
+	}
+
+	// 2) Helpers vorbereiten
+	hash, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("bcrypt: %w", err)
+	}
+
+	profileJSON, err := json.Marshal(c.ProfileData)
+	if err != nil {
+		return fmt.Errorf("json marshal: %w", err)
+	}
+
+	// 3) Transaktion starten — jetzt wissen wir den Pfad
 	tx, err := pool.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("tx begin: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	// 1) Existiert der User schon?
-	var userID string
-	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE email_norm = LOWER($1)`, c.Email).Scan(&userID)
-
-	hash, err2 := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
-	if err2 != nil {
-		return err2
-	}
-
-	profileJSON, err3 := json.Marshal(c.ProfileData)
-	if err3 != nil {
-		return err3
-	}
-
-	if err != nil {
-		// User existiert nicht → neu anlegen
+	if !userExists {
+		// User neu anlegen
 		err = tx.QueryRow(ctx, `
 			INSERT INTO users (email, email_norm, password_hash, role, status)
 			VALUES ($1, LOWER($1), $2, 'creator', 'active')
@@ -333,9 +343,9 @@ func upsertCreator(ctx context.Context, pool *pgxpool.Pool, c CreatorSeed) error
 			return fmt.Errorf("creator insert: %w", err)
 		}
 
-		fmt.Printf("✓  %-10s neu      | %s, %d | %s\n", c.DisplayName, c.City, c.Age, c.Email)
+		fmt.Printf("✓  %-10s neu          | %s, %d | %s\n", c.DisplayName, c.City, c.Age, c.Email)
 	} else {
-		// User existiert → Felder updaten
+		// User existiert → updaten
 		_, err = tx.Exec(ctx, `
 			UPDATE users SET password_hash = $1, role = 'creator', status = 'active'
 			WHERE id = $2
@@ -362,7 +372,10 @@ func upsertCreator(ctx context.Context, pool *pgxpool.Pool, c CreatorSeed) error
 		fmt.Printf("↻  %-10s aktualisiert | %s, %d | %s\n", c.DisplayName, c.City, c.Age, c.Email)
 	}
 
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("tx commit: %w", err)
+	}
+	return nil
 }
 
 func getenv(key, def string) string {
