@@ -3,6 +3,7 @@ package push
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -38,23 +39,45 @@ func NewSender(db *pgxpool.Pool) *Sender {
 	}
 }
 
+// PublicKey gibt den VAPID-Public-Key zurueck (fuer Frontend-Subscribe).
+func (sender *Sender) PublicKey() string {
+	return sender.vapidPublic
+}
+
 // SendToUser schickt eine Push-Notification an alle Devices eines Users.
 // Funktioniert async im Hintergrund (kein Block des HTTP-Requests).
 // Tote Subscriptions (410 Gone) werden automatisch geloescht.
-func (s *Sender) SendToUser(userID uuid.UUID, payload Payload) {
-	if s.vapidPublic == "" || s.vapidPriv == "" {
+func (sender *Sender) SendToUser(userID uuid.UUID, payload Payload) {
+	if sender.vapidPublic == "" || sender.vapidPriv == "" {
 		log.Printf("[push] VAPID-Keys fehlen, skip")
 		return
 	}
-
-	go s.sendToUserInternal(userID, payload)
+	go sender.sendToUserInternal(userID, payload)
 }
 
-func (s *Sender) sendToUserInternal(userID uuid.UUID, payload Payload) {
+// SendToUsers schickt eine Push-Notification an alle aufgelisteten User.
+// Beispiel: an alle Admins gleichzeitig.
+func (sender *Sender) SendToUsers(userIDs []uuid.UUID, payload Payload) {
+	for _, uid := range userIDs {
+		sender.SendToUser(uid, payload)
+	}
+}
+
+// SetGlobal bleibt als no-op fuer Backwards-Compat (kann spaeter entfernt werden).
+func SetGlobal(s *Sender) {}
+
+type subscription struct {
+	ID       uuid.UUID
+	Endpoint string
+	P256dh   string
+	Auth     string
+}
+
+func (sender *Sender) sendToUserInternal(userID uuid.UUID, payload Payload) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	rows, err := s.db.Query(ctx, `
+	rows, err := sender.db.Query(ctx, `
 		SELECT id, endpoint, p256dh_key, auth_key
 		FROM push_subscriptions
 		WHERE user_id = $1
@@ -63,22 +86,16 @@ func (s *Sender) sendToUserInternal(userID uuid.UUID, payload Payload) {
 		log.Printf("[push] Query-Error: %v", err)
 		return
 	}
-	defer rows.Close()
 
-	type sub struct {
-		ID       uuid.UUID
-		Endpoint string
-		P256dh   string
-		Auth     string
-	}
-	var subs []sub
+	var subs []subscription
 	for rows.Next() {
-		var x sub
+		var x subscription
 		if err := rows.Scan(&x.ID, &x.Endpoint, &x.P256dh, &x.Auth); err != nil {
 			continue
 		}
 		subs = append(subs, x)
 	}
+	rows.Close()
 
 	if len(subs) == 0 {
 		return
@@ -90,90 +107,48 @@ func (s *Sender) sendToUserInternal(userID uuid.UUID, payload Payload) {
 		return
 	}
 
-	for _, x := range subs {
-		s := &webpush.Subscription{
-			Endpoint: x.Endpoint,
+	subj := sender.vapidSubj
+	if subj == "" {
+		subj = "mailto:admin@verliebdich.com"
+	}
+
+	for _, sub := range subs {
+		webpushSub := &webpush.Subscription{
+			Endpoint: sub.Endpoint,
 			Keys: webpush.Keys{
-				P256dh: x.P256dh,
-				Auth:   x.Auth,
+				P256dh: sub.P256dh,
+				Auth:   sub.Auth,
 			},
 		}
 
-		resp, err := webpush.SendNotification(body, s, &webpush.Options{
-			Subscriber:      sender_subject_or_default(),
-			VAPIDPublicKey:  sender_public_or_default(),
-			VAPIDPrivateKey: sender_priv_or_default(),
+		resp, err := webpush.SendNotification(body, webpushSub, &webpush.Options{
+			Subscriber:      subj,
+			VAPIDPublicKey:  sender.vapidPublic,
+			VAPIDPrivateKey: sender.vapidPriv,
 			TTL:             60,
 		})
 		if err != nil {
-			log.Printf("[push] Send-Error fuer %s: %v", x.Endpoint, err)
+			log.Printf("[push] Send-Error fuer %s: %v", sub.Endpoint, err)
 			continue
+		}
+		if resp.StatusCode >= 400 {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			log.Printf("[push] Send-Error status=%d body=%s", resp.StatusCode, string(bodyBytes))
 		}
 		_ = resp.Body.Close()
 
 		// 404/410 = Subscription tot -> loeschen
 		if resp.StatusCode == http.StatusGone || resp.StatusCode == http.StatusNotFound {
-			_, _ = s_db_exec(x.ID)
-			log.Printf("[push] tote Subscription geloescht: %s", x.Endpoint)
+			ctx2, c2 := context.WithTimeout(context.Background(), 5*time.Second)
+			_, _ = sender.db.Exec(ctx2, "DELETE FROM push_subscriptions WHERE id = $1", sub.ID)
+			c2()
+			log.Printf("[push] tote Subscription geloescht: %s", sub.Endpoint)
 			continue
 		}
 
 		// Erfolgreich -> last_used_at updaten
-		_, _ = s_db_update_last_used(x.ID)
+		ctx2, c2 := context.WithTimeout(context.Background(), 5*time.Second)
+		_, _ = sender.db.Exec(ctx2, "UPDATE push_subscriptions SET last_used_at = NOW() WHERE id = $1", sub.ID)
+		c2()
 	}
-}
-
-// Helper-Funktionen weil senderInternal kein Receiver-Access auf "s" hat
-// (Workaround weil die Closure-Variable s gleichzeitig die Subscription ist).
-// Wir nutzen Package-globale Funktionen die das Sender-Singleton lesen.
-
-var globalSender *Sender
-
-func sender_subject_or_default() string {
-	if globalSender != nil && globalSender.vapidSubj != "" {
-		return globalSender.vapidSubj
-	}
-	return "mailto:admin@verliebdich.com"
-}
-
-func sender_public_or_default() string {
-	if globalSender != nil {
-		return globalSender.vapidPublic
-	}
-	return ""
-}
-
-func sender_priv_or_default() string {
-	if globalSender != nil {
-		return globalSender.vapidPriv
-	}
-	return ""
-}
-
-func s_db_exec(id uuid.UUID) (any, error) {
-	if globalSender == nil {
-		return nil, nil
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	return globalSender.db.Exec(ctx, "DELETE FROM push_subscriptions WHERE id = $1", id)
-}
-
-func s_db_update_last_used(id uuid.UUID) (any, error) {
-	if globalSender == nil {
-		return nil, nil
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	return globalSender.db.Exec(ctx, "UPDATE push_subscriptions SET last_used_at = NOW() WHERE id = $1", id)
-}
-
-// SetGlobal wird beim Server-Start aufgerufen.
-func SetGlobal(s *Sender) {
-	globalSender = s
-}
-
-// PublicKey gibt den VAPID-Public-Key zurueck (fuer Frontend-Subscribe).
-func (s *Sender) PublicKey() string {
-	return s.vapidPublic
 }

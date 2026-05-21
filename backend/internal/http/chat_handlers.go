@@ -571,6 +571,17 @@ func (s *Server) sendMessage(c *fiber.Ctx) error {
 		newBalance, _ := s.wallet.GetBalance(ctx, uid)
 		resp["balance_coins"] = newBalance
 	}
+
+	// === PUSH-NOTIFICATION an den Empfaenger ===
+	// Der Empfaenger ist der jeweils andere Teilnehmer der Conversation.
+	var receiverID uuid.UUID
+	if senderRole == "customer" {
+		receiverID = creatorID
+	} else {
+		receiverID = customerID
+	}
+	s.notifyNewMessage(ctx, receiverID, uid, senderRole, convID.String(), body)
+
 	return c.JSON(resp)
 }
 

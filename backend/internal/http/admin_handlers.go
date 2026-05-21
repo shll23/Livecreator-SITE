@@ -115,6 +115,13 @@ func (s *Server) adminApprovePhoto(c *fiber.Ctx) error {
 	if tag.RowsAffected() == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "photo_not_found_or_not_pending"})
 	}
+
+	// === PUSH an Creator: Foto freigegeben ===
+	var creatorID uuid.UUID
+	if err := s.db.QueryRow(ctx, `SELECT creator_id FROM profile_photos WHERE id = $1`, photoID).Scan(&creatorID); err == nil {
+		s.notifyCreatorPhotoApproved(ctx, creatorID)
+	}
+
 	return c.JSON(fiber.Map{"approved": true})
 }
 

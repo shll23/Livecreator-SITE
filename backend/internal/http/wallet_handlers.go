@@ -241,13 +241,14 @@ a.btn:active{background:#000000}
 func (s *Server) completePurchase(ctx context.Context, purchaseID uuid.UUID) error {
 	// Purchase holen
 	var (
-		userID uuid.UUID
-		coins  int
-		status string
+		userID     uuid.UUID
+		coins      int
+		priceCents int
+		status     string
 	)
 	err := s.db.QueryRow(ctx, `
-		SELECT user_id, coins, status FROM coin_purchases WHERE id = $1
-	`, purchaseID).Scan(&userID, &coins, &status)
+		SELECT user_id, coins, price_cents, status FROM coin_purchases WHERE id = $1
+	`, purchaseID).Scan(&userID, &coins, &priceCents, &status)
 	if err != nil {
 		return fmt.Errorf("get purchase: %w", err)
 	}
@@ -297,6 +298,9 @@ func (s *Server) completePurchase(ctx context.Context, purchaseID uuid.UUID) err
 	if err != nil {
 		return fmt.Errorf("update purchase: %w", err)
 	}
+
+	// === PUSH an Admins: erfolgreicher Coin-Kauf ===
+	s.notifyAdminsNewPurchase(ctx, userID, coins, priceCents)
 
 	return nil
 }

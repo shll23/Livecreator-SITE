@@ -208,6 +208,9 @@ func (s *Server) uploadMyPhoto(c *fiber.Ctx) error {
 		return errInternal(c, err)
 	}
 
+	// === PUSH an Admins: Foto wartet auf Moderation ===
+	s.notifyAdminsNewPhoto(c.UserContext(), uid)
+
 	return c.JSON(fiber.Map{
 		"id":         photoID,
 		"file_path":  urlPath,

@@ -211,6 +211,9 @@ func (s *Server) registerCustomer(c *fiber.Ctx) error {
 		return errInternal(c, err)
 	}
 
+	// === PUSH an Admins: neuer Customer registriert ===
+	s.notifyAdminsNewCustomer(ctx, req.Email)
+
 	return s.issueTokens(c, userID, models.RoleCustomer)
 }
 
