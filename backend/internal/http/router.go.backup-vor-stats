@@ -118,10 +118,5 @@ func (s *Server) SetupRouter() *fiber.App {
 	adminGroup.Post("/payouts", s.adminCreatePayout)
 	adminGroup.Post("/payouts/:id/invoice", s.adminUploadInvoice)
 
-	// Admin Stats + Customers + Purchases (Phase G1+G2)
-	adminGroup.Get("/stats/platform", s.adminPlatformStats)
-	adminGroup.Get("/customers", s.adminListCustomers)
-	adminGroup.Get("/purchases", s.adminListPurchases)
-
 	return app
 }

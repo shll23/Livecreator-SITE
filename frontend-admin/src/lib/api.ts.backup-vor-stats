@@ -31,35 +31,22 @@ export class APIError extends Error {
   }
 }
 
-// Mutex: stellt sicher dass nur EIN refresh-Call gleichzeitig laeuft.
-let refreshPromise: Promise<string> | null = null;
-
 async function refreshAccessToken(): Promise<string> {
-  if (refreshPromise) return refreshPromise;
+  const refresh = getRefreshToken();
+  if (!refresh) throw new APIError(401, 'no_refresh_token');
 
-  refreshPromise = (async () => {
-    const refresh = getRefreshToken();
-    if (!refresh) throw new APIError(401, 'no_refresh_token');
-
-    const res = await fetch(`${API_URL}/api/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refresh }),
-    });
-    if (!res.ok) {
-      clearTokens();
-      throw new APIError(res.status, 'refresh_failed');
-    }
-    const data = await res.json();
-    setTokens(data.access_token, data.refresh_token);
-    return data.access_token;
-  })();
-
-  try {
-    return await refreshPromise;
-  } finally {
-    refreshPromise = null;
+  const res = await fetch(`${API_URL}/api/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refresh }),
+  });
+  if (!res.ok) {
+    clearTokens();
+    throw new APIError(res.status, 'refresh_failed');
   }
+  const data = await res.json();
+  setTokens(data.access_token, data.refresh_token);
+  return data.access_token;
 }
 
 export async function api<T = any>(
@@ -592,61 +579,4 @@ export async function adminUploadInvoice(payoutID: string, file: File): Promise<
     throw new APIError(res.status, data?.error || 'upload_failed');
   }
   return data;
-}
-
-
-// ============================================================================
-// PHASE G1+G2: Plattform-Stats, Kunden, Coin-Kaeufe
-// ============================================================================
-
-export interface PlatformStats {
-  revenue_total_cents: number;
-  revenue_month_cents: number;
-  purchases_total: number;
-  purchases_month: number;
-  coins_sold_total: number;
-  coins_sold_month: number;
-  customers_total: number;
-  customers_active_month: number;
-  customers_new_month: number;
-  messages_total: number;
-  messages_month: number;
-  creators_active: number;
-}
-
-export async function adminPlatformStats(): Promise<PlatformStats> {
-  return api('/api/admin/stats/platform');
-}
-
-export interface AdminCustomer {
-  id: string;
-  email: string;
-  display_name: string;
-  created_at: string;
-  last_login_at: string | null;
-  coins_bought: number;
-  total_spent_cents: number;
-  purchase_count: number;
-  messages_sent: number;
-}
-
-export async function adminListCustomers(): Promise<{ customers: AdminCustomer[] }> {
-  return api('/api/admin/customers');
-}
-
-export interface AdminPurchase {
-  id: string;
-  user_id: string;
-  email: string;
-  coins: number;
-  price_cents: number;
-  currency: string;
-  provider: string;
-  status: string;
-  created_at: string;
-  completed_at: string | null;
-}
-
-export async function adminListPurchases(): Promise<{ purchases: AdminPurchase[] }> {
-  return api('/api/admin/purchases');
 }

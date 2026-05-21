@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
         setLoading(false);
         return;
       }
-      router.push('/photos');
+      router.push('/dashboard');
     } catch (err) {
       if (err instanceof APIError) {
         if (err.code === 'invalid_credentials') {
