@@ -2,41 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Pink Palette */
-  --brand-50:  #fff1f5;
-  --brand-100: #ffe4ec;
-  --brand-200: #fecdd9;
-  --brand-300: #fda4be;
-  --brand-400: #fb6f9d;
-  --brand-500: #ec4899;
-  --brand-600: #db2777;
-  --brand-700: #be185d;
-  --brand-800: #9d174d;
-  --brand-900: #831843;
-
-  /* Neutrals */
+  /* B2B Neutral Palette — Schwarz/Weiß seriös */
   --bg:         #fafafa;
   --bg-elevated: #ffffff;
-  --bg-subtle:  #f5f5f5;
-  --border:     #e5e7eb;
+  --bg-subtle:  #f4f4f5;
+  --border:     #e4e4e7;
   --border-strong: #d4d4d8;
   --text:       #18181b;
   --text-muted: #71717a;
   --text-subtle: #a1a1aa;
 
+  /* Accent — minimal, nur für CTAs */
+  --accent:     #18181b;       /* Schwarz */
+  --accent-hover: #27272a;
+  --success:    #16a34a;
+  --warning:    #ca8a04;
+  --danger:     #dc2626;
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow:    0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.04);
   --shadow-lg: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.06);
-  --shadow-pink: 0 8px 32px -4px rgb(236 72 153 / 0.25);
 
   /* Fonts */
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 * {
   -webkit-font-smoothing: antialiased;
@@ -48,6 +44,8 @@ html, body {
   color: var(--text);
   font-family: var(--font-body);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  margin: 0;
+  padding: 0;
 }
 
 .font-display {
@@ -56,24 +54,25 @@ html, body {
   letter-spacing: -0.02em;
 }
 
-.bg-brand-gradient {
-  background: linear-gradient(135deg, var(--brand-400), var(--brand-600));
-}
-
-.bg-soft-gradient {
-  background: linear-gradient(180deg, #fff1f5 0%, #ffffff 100%);
-}
-
-.bg-mesh {
-  background:
-    radial-gradient(at 20% 0%, hsla(330, 100%, 95%, 1) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, hsla(335, 100%, 96%, 1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, hsla(340, 100%, 97%, 1) 0px, transparent 50%),
-    #fafafa;
-}
-
 button, a, input, select, textarea {
   transition: all 150ms ease;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
+input[type='tel'],
+input[type='search'],
+textarea,
+select {
+  font-size: 16px;
+}
+
+@media (min-width: 1024px) {
+  input, textarea, select {
+    font-size: inherit;
+  }
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -86,7 +85,7 @@ button, a, input, select, textarea {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); }
 
 :focus-visible {
-  outline: 2px solid var(--brand-500);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
@@ -99,13 +98,7 @@ button, a, input, select, textarea {
   animation: fade-up 400ms ease-out backwards;
 }
 
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.shimmer {
-  background: linear-gradient(90deg, transparent, rgba(236,72,153,0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+.h-dvh {
+  height: 100vh;
+  height: 100dvh;
 }

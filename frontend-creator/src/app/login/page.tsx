@@ -1,114 +1,134 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { login, APIError } from '@/lib/api';
+import { login as apiLogin, APIError } from '@/lib/api';
 
-const errorMessages: Record<string, string> = {
-  invalid_credentials: 'Email oder Passwort ist falsch.',
-  account_not_active: 'Dieses Konto ist gesperrt.',
-};
-
-export default function LoginPage() {
+export default function CreatorLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    if (loading) return;
+
     setLoading(true);
+    setError(null);
     try {
-      const res = await login({ email, password });
-      if (res.role !== 'creator' && res.role !== 'admin') {
-        setError('Dies ist kein Creator-Konto.');
+      const res = await apiLogin({ email: email.trim(), password });
+      if (res.role !== 'creator') {
+        setError('Dieser Login ist nur für Creator. Bitte nutze die Customer-Seite.');
         setLoading(false);
         return;
       }
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof APIError) {
-        setError(errorMessages[err.code] || 'Anmeldung fehlgeschlagen.');
+        if (err.code === 'invalid_credentials') {
+          setError('E-Mail oder Passwort falsch.');
+        } else if (err.code === 'account_not_active') {
+          setError('Dein Account wurde noch nicht freigeschaltet. Bitte wende dich an die Verwaltung.');
+        } else {
+          setError('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
+        }
       } else {
-        setError('Verbindung fehlgeschlagen.');
+        setError('Verbindung zum Server fehlgeschlagen.');
       }
       setLoading(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-mesh">
-      <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-brand-300/30 blur-3xl"></div>
-      <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl"></div>
-
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md animate-fade-up">
-          <div className="mb-8 flex flex-col items-center">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-pink">
-              <span className="font-display text-2xl font-bold text-white">v</span>
-            </div>
-            <div className="mt-3 font-display text-2xl font-bold tracking-tight">Creator Studio</div>
-            <div className="text-xs uppercase tracking-wider text-zinc-500">verliebdich</div>
+    <main className="min-h-screen flex items-center justify-center bg-zinc-50 px-4 py-8">
+      <div className="w-full max-w-sm">
+        {/* Brand-Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-zinc-900" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            <span className="font-display text-lg font-semibold tracking-tight text-zinc-900">
+              verliebdich
+            </span>
           </div>
-
-          <div className="rounded-3xl border border-zinc-200/60 bg-white p-8 shadow-lg md:p-10">
-            <div className="mb-7 text-center">
-              <h1 className="font-display text-3xl font-bold tracking-tight">Willkommen zurück</h1>
-              <p className="mt-2 text-sm text-zinc-500">Melde dich mit deinem Creator-Konto an.</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm focus:border-brand-400 focus:ring-4 focus:ring-brand-100 focus:outline-none"
-                  placeholder="creator@beispiel.de"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">Passwort</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm focus:border-brand-400 focus:ring-4 focus:ring-brand-100 focus:outline-none"
-                />
-              </div>
-
-              {error && (
-                <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-pink transition hover:from-brand-600 hover:to-brand-700 disabled:opacity-50"
-              >
-                {loading ? 'Anmelden…' : 'Anmelden'}
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-sm text-zinc-500">
-              Noch kein Konto?{' '}
-              <Link href="/register" className="font-semibold text-brand-600 hover:text-brand-700">
-                Jetzt registrieren
-              </Link>
-            </p>
-          </div>
+          <h1 className="font-display text-2xl font-semibold text-zinc-900 tracking-tight">
+            Creator Studio
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Melde dich an, um deine Nachrichten zu sehen.
+          </p>
         </div>
+
+        {/* Form-Card */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm"
+        >
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-xs font-semibold text-zinc-700 mb-1.5 uppercase tracking-wider">
+                E-Mail
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-zinc-300 bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-100 focus:outline-none text-zinc-900 text-sm disabled:bg-zinc-50 disabled:cursor-not-allowed"
+                placeholder="name@verliebdich.test"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-xs font-semibold text-zinc-700 mb-1.5 uppercase tracking-wider">
+                Passwort
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-zinc-300 bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-100 focus:outline-none text-zinc-900 text-sm disabled:bg-zinc-50 disabled:cursor-not-allowed"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5">
+                <p className="text-xs text-red-800">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 active:bg-black text-white font-semibold text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Anmelden…
+                </>
+              ) : (
+                'Anmelden'
+              )}
+            </button>
+          </div>
+        </form>
+
+        <p className="text-xs text-zinc-400 text-center mt-6">
+          Kein Account? Wende dich an deinen Manager.
+        </p>
       </div>
-    </div>
+    </main>
   );
 }

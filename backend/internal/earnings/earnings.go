@@ -24,11 +24,11 @@ type Tier struct {
 }
 
 var Tiers = []Tier{
-	{Name: "Bronze", MinCoins: 0, MaxCoins: 10000, Percent: 25.0},
-	{Name: "Silber", MinCoins: 10001, MaxCoins: 25000, Percent: 27.5},
-	{Name: "Gold", MinCoins: 25001, MaxCoins: 50000, Percent: 30.0},
-	{Name: "Platin", MinCoins: 50001, MaxCoins: 100000, Percent: 32.5},
-	{Name: "Diamant", MinCoins: 100001, MaxCoins: -1, Percent: 35.0},
+	{Name: "", MinCoins: 0, MaxCoins: 10000, Percent: 22.5},
+	{Name: "", MinCoins: 10001, MaxCoins: 25000, Percent: 25.0},
+	{Name: "", MinCoins: 25001, MaxCoins: 50000, Percent: 27.5},
+	{Name: "", MinCoins: 50001, MaxCoins: 100000, Percent: 30.0},
+	{Name: "", MinCoins: 100001, MaxCoins: -1, Percent: 32.5},
 }
 
 // TierForCoins gibt zurück: aktueller Tier, nächster Tier, Coins bis zum nächsten Tier.
@@ -66,18 +66,19 @@ func RecordEarning(
 	messageID, creatorID, customerID uuid.UUID,
 	coinsEarned int,
 ) error {
-	// Lifetime-Coins VOR dieser Nachricht abfragen
-	var lifetimeBefore int64
+	// MONATS-Coins VOR dieser Nachricht abfragen (Reset am 1. des Monats)
+	var monthCoinsBefore int64
 	err := tx.QueryRow(ctx, `
 		SELECT COALESCE(SUM(coins_earned), 0)::BIGINT
 		FROM creator_earnings
 		WHERE creator_id = $1
-	`, creatorID).Scan(&lifetimeBefore)
+		  AND created_at >= date_trunc('month', NOW())
+	`, creatorID).Scan(&monthCoinsBefore)
 	if err != nil {
-		return fmt.Errorf("query lifetime: %w", err)
+		return fmt.Errorf("query month coins: %w", err)
 	}
 
-	tier, _, _ := TierForCoins(lifetimeBefore)
+	tier, _, _ := TierForCoins(monthCoinsBefore)
 	commission := CommissionCents(coinsEarned, tier.Percent)
 
 	_, err = tx.Exec(ctx, `
@@ -161,7 +162,8 @@ func (s *Service) GetStats(ctx context.Context, creatorID uuid.UUID) (*Stats, er
 		return nil, fmt.Errorf("query stats: %w", err)
 	}
 
-	tier, nextTier, coinsToNext := TierForCoins(stats.Total.Coins)
+	// Tier basiert auf MONATS-Coins (Reset am 1. des Monats)
+	tier, nextTier, coinsToNext := TierForCoins(stats.Month.Coins)
 	stats.CurrentTier = tier.Name
 	stats.TierPercent = tier.Percent
 	if nextTier != nil {

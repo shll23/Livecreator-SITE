@@ -193,3 +193,26 @@ export function formatCents(cents: number, currency: string = 'EUR'): string {
     currency,
   }).format(cents / 100);
 }
+
+// === Creator-API ===
+
+export interface CreatorStatsPeriod {
+  coins: number;
+  messages: number;
+  cents: number;
+}
+
+export interface CreatorStats {
+  today: CreatorStatsPeriod;
+  week: CreatorStatsPeriod;
+  month: CreatorStatsPeriod;
+  total: CreatorStatsPeriod;
+  current_tier: string;
+  tier_percent: number;
+  next_tier?: string;
+  coins_to_next: number;
+}
+
+export async function getCreatorStats(): Promise<CreatorStats> {
+  return api<CreatorStats>('/api/creator/stats');
+}
