@@ -319,3 +319,109 @@ export function formatTime(iso: string | null): string {
   if (!iso) return '';
   return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
+
+// ============================================================================
+// PROFIL-API (für Creator selbst)
+// ============================================================================
+
+export interface MyProfile {
+  handle: string;
+  display_name: string;
+  bio: string | null;
+  city: string | null;
+  country: string | null;
+  avatar_url: string | null;
+  age: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  message_price_coins: number;
+  gallery_urls: string[];
+  profile_data: ProfileData;
+}
+
+export interface ProfileData {
+  about_text?: string;
+  height_cm?: number;
+  figure?: string;
+  hair_color?: string;
+  hair_length?: string;
+  eye_color?: string;
+  zodiac?: string;
+  smoker?: string;
+  tattoos?: string;
+  piercings?: string;
+  marital_status?: string;
+  looking_for?: string[];
+  turn_ons?: string[];
+  interests?: string[];
+  [key: string]: any;
+}
+
+export interface ProfilePhoto {
+  id: string;
+  file_path: string;
+  thumb_path: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  status: 'pending_review' | 'approved' | 'rejected';
+  rejection_reason: string | null;
+  width: number | null;
+  height: number | null;
+  file_size_bytes: number | null;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export async function getMyProfile(): Promise<MyProfile> {
+  return api('/api/creator/profile');
+}
+
+export async function updateMyProfile(updates: {
+  bio?: string;
+  profile_data?: ProfileData;
+}): Promise<{ updated: boolean }> {
+  return api('/api/creator/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
+}
+
+export async function listMyPhotos(): Promise<{ photos: ProfilePhoto[] }> {
+  return api('/api/creator/profile/photos');
+}
+
+export async function uploadMyPhoto(file: File): Promise<ProfilePhoto> {
+  const token = getAccessToken();
+  if (!token) throw new APIError(401, 'unauthenticated');
+
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const base = process.env.NEXT_PUBLIC_API_URL || '';
+  const res = await fetch(base + '/api/creator/profile/photos', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new APIError(res.status, data?.error || 'upload_failed');
+  }
+  return data as ProfilePhoto;
+}
+
+export async function deleteMyPhoto(id: string): Promise<{ deleted: boolean }> {
+  return api(`/api/creator/profile/photos/${id}`, { method: 'DELETE' });
+}
+
+export async function setMyPrimaryPhoto(id: string): Promise<{ updated: boolean }> {
+  return api(`/api/creator/profile/photos/${id}/primary`, { method: 'POST' });
+}
+
+export async function reorderMyPhotos(photoIds: string[]): Promise<{ updated: boolean }> {
+  return api('/api/creator/profile/photos/reorder', {
+    method: 'POST',
+    body: JSON.stringify({ photo_ids: photoIds }),
+  });
+}

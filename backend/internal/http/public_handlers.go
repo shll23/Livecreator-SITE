@@ -103,7 +103,7 @@ func (s *Server) listCreators(c *fiber.Ctx) error {
 		SELECT c.user_id, c.handle, c.display_name, c.bio, c.avatar_url,
 		       c.cover_url, c.message_price_coins, c.is_verified,
 		       c.age, c.city, c.country, c.latitude, c.longitude,
-		       c.gallery_urls, c.profile_data
+		       COALESCE((SELECT array_agg(file_path ORDER BY sort_order) FROM profile_photos WHERE creator_id = c.user_id AND status = 'approved'), ARRAY[]::TEXT[]) AS gallery_urls, c.profile_data
 		       %s
 		FROM creators c
 		JOIN users u ON u.id = c.user_id
@@ -218,7 +218,7 @@ func (s *Server) getCreatorByHandle(c *fiber.Ctx) error {
 		SELECT c.user_id, c.display_name, c.bio, c.avatar_url, c.cover_url,
 		       c.message_price_coins, c.is_verified,
 		       c.age, c.city, c.country,
-		       c.gallery_urls, c.profile_data
+		       COALESCE((SELECT array_agg(file_path ORDER BY sort_order) FROM profile_photos WHERE creator_id = c.user_id AND status = 'approved'), ARRAY[]::TEXT[]) AS gallery_urls, c.profile_data
 		FROM creators c
 		JOIN users u ON u.id = c.user_id
 		WHERE c.handle = $1 AND c.is_listed = TRUE AND u.status = 'active'

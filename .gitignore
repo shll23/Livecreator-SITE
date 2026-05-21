@@ -35,3 +35,6 @@ yarn-error.log*
 coverage/
 *.cover
 .nyc_output/
+
+# User-Daten (Bilder etc.) - nicht ins Repo!
+storage/
