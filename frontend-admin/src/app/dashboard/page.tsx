@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import PushPermissionButton from '@/components/PushPermissionButton';
 import { adminPlatformStats, getAccessToken, PlatformStats } from '@/lib/api';
 
 function formatEuro(cents: number): string {
@@ -48,9 +49,12 @@ export default function DashboardPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8 lg:py-10">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-3xl lg:text-4xl font-semibold text-zinc-900">Dashboard</h1>
-            <p className="text-zinc-500 mt-1 text-sm">Plattform-Übersicht und Live-Stats.</p>
+          <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="font-display text-3xl lg:text-4xl font-semibold text-zinc-900">Dashboard</h1>
+              <p className="text-zinc-500 mt-1 text-sm">Plattform-Übersicht und Live-Stats.</p>
+            </div>
+            <PushPermissionButton />
           </div>
 
           {error && (

@@ -474,3 +474,29 @@ export function getInvoiceUrl(payoutId: string): string {
 export async function sendHeartbeat(): Promise<{ ok: boolean; session: string }> {
   return api('/api/auth/heartbeat', { method: 'POST' });
 }
+
+
+// ============================================================================
+// PHASE G7: Push-Notifications
+// ============================================================================
+
+export async function getVapidPublicKey(): Promise<string> {
+  const res = await fetch(`${API_URL}/api/notifications/vapid-public-key`);
+  if (!res.ok) throw new APIError(res.status, 'no_vapid_key');
+  const data = await res.json();
+  return data.public_key;
+}
+
+export async function subscribePush(subscription: PushSubscriptionJSON): Promise<void> {
+  return api('/api/notifications/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(subscription),
+  });
+}
+
+export async function unsubscribePush(endpoint: string): Promise<void> {
+  return api('/api/notifications/unsubscribe', {
+    method: 'DELETE',
+    body: JSON.stringify({ endpoint }),
+  });
+}

@@ -10,6 +10,7 @@ import {
   APIError,
 } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
+import PushPermissionButton from '@/components/PushPermissionButton';
 
 // Formatiert Cent in "12,34 €"
 function formatEuro(cents: number): string {
@@ -117,13 +118,16 @@ export default function DashboardPage() {
 
       <main className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-zinc-900 tracking-tight">
-            Übersicht
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Deine wichtigsten Kennzahlen auf einen Blick.
-          </p>
+        <div className="mb-6 sm:mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="font-display text-3xl sm:text-4xl font-semibold text-zinc-900 tracking-tight">
+              Übersicht
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              Deine wichtigsten Kennzahlen auf einen Blick.
+            </p>
+          </div>
+          <PushPermissionButton />
         </div>
 
         {/* Coins-heute Hero-Counter */}
