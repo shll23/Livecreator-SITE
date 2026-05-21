@@ -107,5 +107,16 @@ func (s *Server) SetupRouter() *fiber.App {
 	creatorGroup.Get("/payouts", s.listMyPayouts)
 	creatorGroup.Get("/payouts/:id/invoice", s.downloadMyInvoice)
 
+	// Admin-Routes
+	adminGroup := api.Group("/admin", s.requireAuth, s.requireAdmin)
+	adminGroup.Get("/photos/pending", s.adminListPendingPhotos)
+	adminGroup.Post("/photos/:id/approve", s.adminApprovePhoto)
+	adminGroup.Post("/photos/:id/reject", s.adminRejectPhoto)
+	adminGroup.Get("/creators", s.adminListCreators)
+	adminGroup.Get("/creators/:id/monthly-earnings", s.adminCreatorMonthlyEarnings)
+	adminGroup.Get("/payouts", s.adminListAllPayouts)
+	adminGroup.Post("/payouts", s.adminCreatePayout)
+	adminGroup.Post("/payouts/:id/invoice", s.adminUploadInvoice)
+
 	return app
 }
