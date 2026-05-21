@@ -126,6 +126,21 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Coins-heute Hero-Counter */}
+        {!loading && stats && (
+          <div className="mb-6 bg-zinc-900 text-white rounded-2xl p-6 sm:p-8 animate-fade-up">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 font-semibold mb-2">
+              Coins heute
+            </div>
+            <div className="font-sans text-6xl sm:text-7xl font-semibold tabular-nums tracking-tight">
+              {stats.today.coins.toLocaleString('de-DE')}
+            </div>
+            <div className="text-sm text-zinc-400 mt-2 tabular-nums">
+              {stats.today.messages.toLocaleString('de-DE')} {stats.today.messages === 1 ? 'Nachricht' : 'Nachrichten'} beantwortet
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="flex items-center gap-3 text-zinc-500">
             <div className="w-4 h-4 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" />

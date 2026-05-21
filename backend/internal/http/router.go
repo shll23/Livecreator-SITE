@@ -87,6 +87,7 @@ func (s *Server) SetupRouter() *fiber.App {
 	// Creator-spezifische Endpoints (alle prüfen Role intern)
 	creatorGroup := api.Group("/creator", s.requireAuth)
 	creatorGroup.Get("/stats", s.creatorStats)
+	creatorGroup.Get("/customers/:customer_id", s.creatorCustomerInfo)
 
 	return app
 }

@@ -216,3 +216,106 @@ export interface CreatorStats {
 export async function getCreatorStats(): Promise<CreatorStats> {
   return api<CreatorStats>('/api/creator/stats');
 }
+
+// === Chat-API ===
+
+export interface Conversation {
+  id: string;
+  peer_id: string;
+  peer_name: string;
+  peer_handle: string | null;
+  peer_avatar: string | null;
+  last_message_preview: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  is_blocked: boolean;
+}
+
+export interface ConversationDetail {
+  id: string;
+  creator_user_id: string;
+  customer_user_id: string;
+  peer_name: string;
+  peer_handle: string | null;
+  peer_avatar: string | null;
+  peer_bio: string | null;
+  message_price_coins: number;
+  unread_count: number;
+  is_blocked: boolean;
+}
+
+export interface Message {
+  id: string;
+  sender_role: 'customer' | 'creator' | 'system';
+  sender_id: string;
+  msg_type: string;
+  body: string;
+  coin_cost: number;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface CustomerInfo {
+  customer_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  joined_at: string;
+  lifetime_coins: number;
+  message_count: number;
+  first_message_at: string | null;
+  last_message_at: string | null;
+}
+
+export async function getInbox(): Promise<{ conversations: Conversation[] }> {
+  return api('/api/conversations/');
+}
+
+export async function getConversation(id: string): Promise<ConversationDetail> {
+  return api(`/api/conversations/${id}`);
+}
+
+export async function getMessages(id: string): Promise<{ messages: Message[] }> {
+  return api(`/api/conversations/${id}/messages`);
+}
+
+export async function sendMessage(
+  id: string,
+  body: string
+): Promise<Message & { balance_coins?: number }> {
+  return api(`/api/conversations/${id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
+}
+
+export async function markConversationRead(id: string): Promise<void> {
+  await api(`/api/conversations/${id}/read`, { method: 'POST' });
+}
+
+export async function getCustomerInfo(customerId: string): Promise<CustomerInfo> {
+  return api(`/api/creator/customers/${customerId}`);
+}
+
+// === Helpers ===
+
+export function formatRelativeTime(iso: string | null): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return 'gerade eben';
+  if (diffMin < 60) return `vor ${diffMin} Min.`;
+  if (diffHr < 24) return `vor ${diffHr} Std.`;
+  if (diffDay === 1) return 'gestern';
+  if (diffDay < 7) return `vor ${diffDay} Tagen`;
+  return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+export function formatTime(iso: string | null): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
