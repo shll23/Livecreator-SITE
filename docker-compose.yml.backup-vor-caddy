@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -13,12 +15,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - verliebdich-net
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -26,8 +28,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    networks:
-      - verliebdich-net
 
   backend:
     build:
@@ -62,8 +62,8 @@ services:
       STORAGE_PATH: /app/storage
     volumes:
       - ./storage:/app/storage
-    networks:
-      - verliebdich-net
+    ports:
+      - "8080:8080"
 
   frontend-creator:
     build:
@@ -76,8 +76,8 @@ services:
       - backend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    networks:
-      - verliebdich-net
+    ports:
+      - "3001:3000"
 
   frontend-customer:
     build:
@@ -90,8 +90,8 @@ services:
       - backend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    networks:
-      - verliebdich-net
+    ports:
+      - "3000:3000"
 
   frontend-admin:
     build:
@@ -104,34 +104,9 @@ services:
       - backend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    networks:
-      - verliebdich-net
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - backend
-      - frontend-customer
-      - frontend-creator
-      - frontend-admin
-    networks:
-      - verliebdich-net
+      - "3002:3000"
 
 volumes:
   postgres_data:
   redis_data:
-  caddy_data:
-  caddy_config:
-
-networks:
-  verliebdich-net:
-    driver: bridge

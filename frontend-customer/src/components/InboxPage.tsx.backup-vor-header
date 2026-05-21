@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import AppHeader from '@/components/AppHeader';
 import {
   getInbox,
   getConversation,
@@ -334,9 +333,8 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
 
     return (
       <>
-        {/* DESKTOP: normales Inbox-Layout mit Header */}
+        {/* DESKTOP: normales Inbox-Layout */}
         <div className="hidden lg:flex flex-col h-dvh bg-zinc-50">
-          <AppHeader />
           {renderDesktopLayout()}
         </div>
 
@@ -355,10 +353,6 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
   // ===== NORMAL VIEW =====
   return (
     <div className="flex flex-col h-dvh bg-white lg:bg-zinc-50">
-      {/* DESKTOP HEADER - nur auf Desktop sichtbar, Mobile bleibt unveraendert */}
-      <div className="hidden lg:block">
-        <AppHeader />
-      </div>
       <header className="lg:hidden shrink-0 bg-white border-b border-zinc-100 px-4 py-2.5 flex items-center justify-between">
         <Link href="/explore" className="inline-flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand-600" fill="currentColor">

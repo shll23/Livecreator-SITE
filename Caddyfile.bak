@@ -1,0 +1,61 @@
+{
+	email admin@verliebdich.com
+}
+
+verliebdich.com, www.verliebdich.com {
+	@www host www.verliebdich.com
+	redir @www https://verliebdich.com{uri} permanent
+	log {
+		output file /data/access-customer.log
+		format json
+	}
+	reverse_proxy frontend-customer:3000
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+api.verliebdich.com {
+	log {
+		output file /data/access-api.log
+		format json
+	}
+	reverse_proxy backend:8080
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+	}
+}
+
+chat-creator.de, www.chat-creator.de {
+	@www host www.chat-creator.de
+	redir @www https://chat-creator.de{uri} permanent
+	log {
+		output file /data/access-creator.log
+		format json
+	}
+	reverse_proxy frontend-creator:3000
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+admin.chat-creator.de {
+	log {
+		output file /data/access-admin.log
+		format json
+	}
+	reverse_proxy frontend-admin:3000
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
