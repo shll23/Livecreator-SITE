@@ -1,7 +1,8 @@
 import './globals.css';
-import type { Viewport } from 'next';
+import type { Viewport, Metadata } from 'next';
 import { Inter, Fraunces } from 'next/font/google';
 import BottomTabBar from '@/components/BottomTabBar';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -15,9 +16,22 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'verliebdich · Chat mit echten Frauen',
   description: 'Diskret und persönlich. Echte Frauen in deiner Nähe.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'verliebdich',
+  },
+  icons: {
+    icon: [
+      { url: '/pwa/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/pwa/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/pwa/icon-192.png',
+  },
 };
 
 // Viewport-Konfiguration für stabile Mobile-Darstellung
@@ -29,13 +43,14 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#ffffff',
+  themeColor: '#ec4899',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" className={`${inter.variable} ${fraunces.variable}`}>
       <body className="font-sans antialiased">
+        <ServiceWorkerRegister />
         {children}
         <BottomTabBar />
       </body>

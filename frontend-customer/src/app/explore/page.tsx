@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { listCreators, getAccessToken, type Creator, type CreatorFilters } from '@/lib/api';
+import { listCreators, getAccessToken, type Creator, type CreatorFilters, buildImageUrl} from '@/lib/api';
 import { CITIES, filterCities, findCity, type CityEntry } from '@/lib/cities';
 import AppHeader from '@/components/AppHeader';
 
@@ -375,7 +375,7 @@ export default function ExplorePage() {
                   <button key={f.user_id} onClick={() => handleCardClick(f)} className="group relative text-left">
                     <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm group-hover:shadow-pink transition-all">
                       {f.avatar_url ? (
-                        <img src={f.avatar_url} alt={f.display_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <img src={buildImageUrl(f.avatar_url)} alt={f.display_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full bg-zinc-200" />
                       )}

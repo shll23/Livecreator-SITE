@@ -375,3 +375,22 @@ export function formatMessageTime(timestamp: string): string {
   const date = new Date(timestamp);
   return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
+
+
+// ============================================================================
+// buildImageUrl
+//
+// Konvertiert relative Bild-Pfade aus der API in volle URLs.
+// /storage/... -> Backend (https://api.verliebdich.com/storage/...)
+// /profiles/...  -> alte Demo-Bilder, werden vom Customer-Frontend selbst gehostet
+// http://... oder https://... -> unveraendert zurueckgeben
+// ============================================================================
+export function buildImageUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+  if (path.startsWith('/storage/')) {
+    return apiBase + path;
+  }
+  return path;
+}

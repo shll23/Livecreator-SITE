@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { api, getAccessToken, getWallet, APIError } from '@/lib/api';
+import { api, getAccessToken, getWallet, APIError, buildImageUrl} from '@/lib/api';
 import { Header } from '@/components/Header';
 
 interface Creator {
@@ -109,7 +109,7 @@ export default function CreatorDetailPage() {
               <div className="grid h-32 w-32 place-items-center rounded-full border-4 border-white bg-gradient-to-br from-brand-100 to-brand-200 text-3xl font-bold text-brand-700 shadow-lg">
                 {creator.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={creator.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+                  <img src={buildImageUrl(creator.avatar_url)} alt="" className="h-full w-full rounded-full object-cover" />
                 ) : (
                   initials
                 )}

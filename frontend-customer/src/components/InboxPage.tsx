@@ -18,6 +18,7 @@ import {
   type Conversation,
   type ConversationDetail,
   type Message,
+  buildImageUrl,
 } from '@/lib/api';
 import CoinIcon from '@/components/CoinIcon';
 
@@ -418,7 +419,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                 >
                   <div className="relative shrink-0">
                     {c.peer_avatar ? (
-                      <img src={c.peer_avatar} alt={c.peer_name} className="w-11 h-11 rounded-full object-cover" />
+                      <img src={buildImageUrl(c.peer_avatar)} alt={c.peer_name} className="w-11 h-11 rounded-full object-cover" />
                     ) : (
                       <div className="w-11 h-11 rounded-full bg-zinc-200" />
                     )}
@@ -491,7 +492,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
             >
               <div className="relative shrink-0">
                 {activeDetail.peer_avatar ? (
-                  <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={buildImageUrl(activeDetail.peer_avatar)} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-zinc-200" />
                 )}
@@ -508,7 +509,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
             <div className="flex items-center gap-2.5 flex-1 min-w-0">
               <div className="relative shrink-0">
                 {activeDetail.peer_avatar ? (
-                  <img src={activeDetail.peer_avatar} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={buildImageUrl(activeDetail.peer_avatar)} alt={activeDetail.peer_name} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-zinc-200" />
                 )}
@@ -541,7 +542,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                 <div className="relative mb-3">
                   {activeDetail.peer_avatar ? (
                     <img
-                      src={activeDetail.peer_avatar}
+                      src={buildImageUrl(activeDetail.peer_avatar)}
                       alt={activeDetail.peer_name}
                       className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md"
                     />
@@ -580,7 +581,7 @@ export default function InboxPage({ initialConversationId }: InboxPageProps) {
                     {!isUser && (
                       <div className="w-6 shrink-0">
                         {showAvatar && activeDetail.peer_avatar && (
-                          <img src={activeDetail.peer_avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                          <img src={buildImageUrl(activeDetail.peer_avatar)} alt="" className="w-6 h-6 rounded-full object-cover" />
                         )}
                       </div>
                     )}

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getCreatorByHandle, createConversation, getAccessToken, type Creator } from '@/lib/api';
+import { getCreatorByHandle, createConversation, getAccessToken, type Creator, buildImageUrl} from '@/lib/api';
 import AppHeader from '@/components/AppHeader';
 import CoinIcon from '@/components/CoinIcon';
 
@@ -277,9 +277,10 @@ export default function ProfilDetailPage() {
   }
 
   const pd = profile.profile_data || {};
-  const images = profile.gallery_urls && profile.gallery_urls.length > 0
+  const rawImages = profile.gallery_urls && profile.gallery_urls.length > 0
     ? profile.gallery_urls
     : (profile.avatar_url ? [profile.avatar_url] : []);
+  const images = rawImages.map(buildImageUrl);
 
   return (
     <>
