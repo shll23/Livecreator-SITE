@@ -132,6 +132,8 @@ func (s *Server) SetupRouter() *fiber.App {
 	adminGroup.Get("/purchases", s.adminListPurchases)
 	adminGroup.Get("/creators/activity-summary", s.adminAllCreatorsActivitySummary)
 	adminGroup.Get("/creators/:id/activity", s.adminCreatorActivity)
+	adminGroup.Get("/push/audience-counts", s.adminPushAudienceCounts)
+	adminGroup.Post("/push/broadcast", s.adminPushBroadcast)
 
 	return app
 }

@@ -707,3 +707,35 @@ export async function unsubscribePush(endpoint: string): Promise<void> {
     body: JSON.stringify({ endpoint }),
   });
 }
+
+
+// ============================================================================
+// PHASE G9: Push-Broadcast (Marketing)
+// ============================================================================
+
+export type AudienceKey = 'all_customers' | 'paying_customers' | 'new_customers_7d' | 'inactive_customers';
+
+export interface AudienceCounts {
+  all_customers: number;
+  paying_customers: number;
+  new_customers_7d: number;
+  inactive_customers: number;
+}
+
+export async function adminGetAudienceCounts(): Promise<{ counts: AudienceCounts }> {
+  return api('/api/admin/push/audience-counts');
+}
+
+export interface BroadcastRequest {
+  title: string;
+  body: string;
+  audience: AudienceKey;
+  click_url?: string;
+}
+
+export async function adminBroadcastPush(req: BroadcastRequest): Promise<{ ok: boolean; recipients: number }> {
+  return api('/api/admin/push/broadcast', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
