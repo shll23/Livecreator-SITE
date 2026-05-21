@@ -84,5 +84,9 @@ func (s *Server) SetupRouter() *fiber.App {
 	convGroup.Post("/:id/messages", s.sendMessage)
 	convGroup.Post("/:id/read", s.markConversationRead)
 
+	// Creator-spezifische Endpoints (alle prüfen Role intern)
+	creatorGroup := api.Group("/creator", s.requireAuth)
+	creatorGroup.Get("/stats", s.creatorStats)
+
 	return app
 }

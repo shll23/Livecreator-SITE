@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/livecreator/backend/internal/earnings"
 	"github.com/livecreator/backend/internal/models"
 	"github.com/livecreator/backend/internal/wallet"
 )
@@ -524,6 +525,13 @@ func (s *Server) sendMessage(c *fiber.Ctx) error {
 	`, unreadUpdate), preview, convID)
 	if err != nil {
 		return errInternal(c, err)
+	}
+
+	// === EARNINGS: Provision für Creator speichern (nur wenn Customer Sender ist) ===
+	if senderRole == "customer" && coinCost > 0 {
+		if err := earnings.RecordEarning(ctx, tx, messageID, creatorID, customerID, coinCost); err != nil {
+			return errInternal(c, err)
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
