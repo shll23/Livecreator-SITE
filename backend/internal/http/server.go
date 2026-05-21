@@ -10,25 +10,30 @@ import (
 	"github.com/livecreator/backend/internal/config"
 	"github.com/livecreator/backend/internal/models"
 	"github.com/livecreator/backend/internal/payment"
+	"github.com/livecreator/backend/internal/push"
 	"github.com/livecreator/backend/internal/wallet"
 	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
-	cfg     *config.Config
-	db      *pgxpool.Pool
-	redis   *redis.Client
-	wallet  *wallet.Service
-	payment payment.Provider
+	cfg        *config.Config
+	db         *pgxpool.Pool
+	redis      *redis.Client
+	wallet     *wallet.Service
+	payment    payment.Provider
+	pushSender *push.Sender
 }
 
 func NewServer(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client, pp payment.Provider) *Server {
+	sender := push.NewSender(db)
+	push.SetGlobal(sender)
 	return &Server{
-		cfg:     cfg,
-		db:      db,
-		redis:   rdb,
-		wallet:  wallet.NewService(db),
-		payment: pp,
+		cfg:        cfg,
+		db:         db,
+		redis:      rdb,
+		wallet:     wallet.NewService(db),
+		payment:    pp,
+		pushSender: sender,
 	}
 }
 

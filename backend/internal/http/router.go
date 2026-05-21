@@ -97,6 +97,11 @@ func (s *Server) SetupRouter() *fiber.App {
 	// Auth-Heartbeat (alle eingeloggten User)
 	api.Post("/auth/heartbeat", s.requireAuth, s.authHeartbeat)
 
+	// Push-Notifications
+	api.Get("/notifications/vapid-public-key", s.pushVapidPublicKey)
+	api.Post("/notifications/subscribe", s.requireAuth, s.pushSubscribe)
+	api.Delete("/notifications/unsubscribe", s.requireAuth, s.pushUnsubscribe)
+
 	creatorGroup := api.Group("/creator", s.requireAuth)
 	creatorGroup.Get("/stats", s.creatorStats)
 	creatorGroup.Get("/customers/:customer_id", s.creatorCustomerInfo)

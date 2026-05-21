@@ -60,6 +60,9 @@ services:
       PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL}
       PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
       STORAGE_PATH: /app/storage
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
     volumes:
       - ./storage:/app/storage
     networks:
