@@ -59,6 +59,9 @@ services:
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER}
       PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL}
       PUBLIC_FRONTEND_URL: ${PUBLIC_FRONTEND_URL}
+      STORAGE_PATH: /app/storage
+    volumes:
+      - ./storage:/app/storage
     ports:
       - "8080:8080"
 

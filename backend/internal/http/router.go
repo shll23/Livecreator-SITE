@@ -1,6 +1,8 @@
 package http
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -46,6 +48,13 @@ func (s *Server) SetupRouter() *fiber.App {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
+	// Static-File-Serving für Profile-Photos
+	storagePath := os.Getenv("STORAGE_PATH")
+	if storagePath == "" {
+		storagePath = "/app/storage"
+	}
+	app.Static("/storage", storagePath)
+
 	api := app.Group("/api")
 
 	// Auth
@@ -88,6 +97,13 @@ func (s *Server) SetupRouter() *fiber.App {
 	creatorGroup := api.Group("/creator", s.requireAuth)
 	creatorGroup.Get("/stats", s.creatorStats)
 	creatorGroup.Get("/customers/:customer_id", s.creatorCustomerInfo)
+	creatorGroup.Get("/profile", s.getMyProfile)
+	creatorGroup.Patch("/profile", s.updateMyProfile)
+	creatorGroup.Get("/profile/photos", s.listMyPhotos)
+	creatorGroup.Post("/profile/photos", s.uploadMyPhoto)
+	creatorGroup.Delete("/profile/photos/:id", s.deleteMyPhoto)
+	creatorGroup.Post("/profile/photos/:id/primary", s.setMyPrimaryPhoto)
+	creatorGroup.Post("/profile/photos/reorder", s.reorderMyPhotos)
 
 	return app
 }
