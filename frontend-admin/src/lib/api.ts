@@ -650,3 +650,34 @@ export interface AdminPurchase {
 export async function adminListPurchases(): Promise<{ purchases: AdminPurchase[] }> {
   return api('/api/admin/purchases');
 }
+
+
+// ============================================================================
+// PHASE G3+G4: Activity-Tracking
+// ============================================================================
+
+export interface CreatorActivitySummary {
+  user_id: string;
+  online_today_seconds: number;
+  last_heartbeat_at: string | null;
+  is_online_now: boolean;
+  avg_response_today_seconds: number | null;
+}
+
+export async function adminCreatorsActivitySummary(): Promise<{ creators: CreatorActivitySummary[] }> {
+  return api('/api/admin/creators/activity-summary');
+}
+
+export interface CreatorActivityDetail {
+  period: string;
+  online_seconds: number;
+  messages_answered: number;
+  avg_response_seconds: number | null;
+  median_response_seconds: number | null;
+  last_heartbeat_at: string | null;
+  is_online_now: boolean;
+}
+
+export async function adminCreatorActivity(creatorID: string, period: 'today' | 'week' | 'month' = 'today'): Promise<CreatorActivityDetail> {
+  return api(`/api/admin/creators/${creatorID}/activity?period=${period}`);
+}

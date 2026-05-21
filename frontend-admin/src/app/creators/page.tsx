@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import {
   getAccessToken,
   adminListCreators,
+  adminCreatorsActivitySummary,
   getMe,
   APIError,
   type AdminCreator,
+  type CreatorActivitySummary,
 } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 
@@ -22,9 +24,26 @@ function initials(name: string): string {
   return name.split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 }
 
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const min = Math.floor(seconds / 60);
+  if (min < 60) return `${min} Min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function formatResponseTime(seconds: number): string {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const min = seconds / 60;
+  if (min < 60) return `${Math.round(min)} Min`;
+  return `${(min / 60).toFixed(1)}h`;
+}
+
 export default function CreatorsPage() {
   const router = useRouter();
   const [creators, setCreators] = useState<AdminCreator[]>([]);
+  const [activityMap, setActivityMap] = useState<Record<string, CreatorActivitySummary>>({});
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +51,16 @@ export default function CreatorsPage() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [res, me] = await Promise.all([
+      const [res, me, activity] = await Promise.all([
         adminListCreators(),
         getMe().catch(() => null),
+        adminCreatorsActivitySummary().catch(() => ({ creators: [] })),
       ]);
       setCreators(res.creators);
       if (me?.display_name) setDisplayName(me.display_name);
+      const map: Record<string, CreatorActivitySummary> = {};
+      for (const a of activity.creators) map[a.user_id] = a;
+      setActivityMap(map);
     } catch (err) {
       if (err instanceof APIError && err.code === 'unauthenticated') {
         router.push('/login');
@@ -155,6 +178,9 @@ export default function CreatorsPage() {
                   <th className="text-right px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Coins</th>
                   <th className="text-right px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Nachrichten</th>
                   <th className="text-right px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Umsatz</th>
+                  <th className="text-left px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Online</th>
+                  <th className="text-right px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Heute</th>
+                  <th className="text-right px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Antwort-Ø</th>
                   <th className="text-left px-4 py-3 text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -182,6 +208,26 @@ export default function CreatorsPage() {
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums font-semibold text-zinc-900">
                       {coinsToEuro(creator.lifetime_coins)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {activityMap[creator.id]?.is_online_now ? (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Online
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-zinc-400">Offline</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-zinc-700 text-xs">
+                      {activityMap[creator.id]?.online_today_seconds
+                        ? formatDuration(activityMap[creator.id].online_today_seconds)
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-zinc-700 text-xs">
+                      {activityMap[creator.id]?.avg_response_today_seconds
+                        ? formatResponseTime(activityMap[creator.id].avg_response_today_seconds!)
+                        : '—'}
                     </td>
                     <td className="px-4 py-3">
                       {creator.status === 'active' ? (

@@ -94,6 +94,9 @@ func (s *Server) SetupRouter() *fiber.App {
 	convGroup.Post("/:id/read", s.markConversationRead)
 
 	// Creator-spezifische Endpoints (alle prüfen Role intern)
+	// Auth-Heartbeat (alle eingeloggten User)
+	api.Post("/auth/heartbeat", s.requireAuth, s.authHeartbeat)
+
 	creatorGroup := api.Group("/creator", s.requireAuth)
 	creatorGroup.Get("/stats", s.creatorStats)
 	creatorGroup.Get("/customers/:customer_id", s.creatorCustomerInfo)
@@ -122,6 +125,8 @@ func (s *Server) SetupRouter() *fiber.App {
 	adminGroup.Get("/stats/platform", s.adminPlatformStats)
 	adminGroup.Get("/customers", s.adminListCustomers)
 	adminGroup.Get("/purchases", s.adminListPurchases)
+	adminGroup.Get("/creators/activity-summary", s.adminAllCreatorsActivitySummary)
+	adminGroup.Get("/creators/:id/activity", s.adminCreatorActivity)
 
 	return app
 }

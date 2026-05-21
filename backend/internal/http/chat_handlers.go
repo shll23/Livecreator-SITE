@@ -496,14 +496,34 @@ func (s *Server) sendMessage(c *fiber.Ctx) error {
 		preview = preview[:117] + "..."
 	}
 
+	// Response-Time berechnen: nur bei Creator-Antworten relevant.
+	// Sekunden seit letzter Customer-Message in dieser Conversation.
+	var responseTimeSeconds *int
+	if senderRole == "creator" {
+		var rt int
+		err = tx.QueryRow(ctx, `
+			SELECT EXTRACT(EPOCH FROM (NOW() - created_at))::INTEGER
+			FROM messages
+			WHERE conversation_id = $1
+			  AND sender_role = 'customer'
+			  AND deleted_at IS NULL
+			ORDER BY created_at DESC
+			LIMIT 1
+		`, convID).Scan(&rt)
+		if err == nil {
+			responseTimeSeconds = &rt
+		}
+		// Wenn keine vorherige Customer-Message: NULL bleibt
+	}
+
 	var messageID uuid.UUID
 	var createdAt interface{}
 	err = tx.QueryRow(ctx, `
 		INSERT INTO messages
-			(conversation_id, sender_role, sender_id, msg_type, body, coin_cost, ledger_transaction_id)
-		VALUES ($1, $2, $3, 'text', $4, $5, $6)
+			(conversation_id, sender_role, sender_id, msg_type, body, coin_cost, ledger_transaction_id, response_time_seconds)
+		VALUES ($1, $2, $3, 'text', $4, $5, $6, $7)
 		RETURNING id, created_at
-	`, convID, senderRole, uid, body, coinCost, ledgerTxID).Scan(&messageID, &createdAt)
+	`, convID, senderRole, uid, body, coinCost, ledgerTxID, responseTimeSeconds).Scan(&messageID, &createdAt)
 	if err != nil {
 		return errInternal(c, err)
 	}

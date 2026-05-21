@@ -31,22 +31,35 @@ export class APIError extends Error {
   }
 }
 
-async function refreshAccessToken(): Promise<string> {
-  const refresh = getRefreshToken();
-  if (!refresh) throw new APIError(401, 'no_refresh_token');
+// Mutex: nur EIN refresh gleichzeitig.
+let refreshPromise: Promise<string> | null = null;
 
-  const res = await fetch(`${API_URL}/api/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refresh }),
-  });
-  if (!res.ok) {
-    clearTokens();
-    throw new APIError(res.status, 'refresh_failed');
+async function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refresh = getRefreshToken();
+    if (!refresh) throw new APIError(401, 'no_refresh_token');
+
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    if (!res.ok) {
+      clearTokens();
+      throw new APIError(res.status, 'refresh_failed');
+    }
+    const data = await res.json();
+    setTokens(data.access_token, data.refresh_token);
+    return data.access_token;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
   }
-  const data = await res.json();
-  setTokens(data.access_token, data.refresh_token);
-  return data.access_token;
 }
 
 export async function api<T = any>(
@@ -452,4 +465,12 @@ export function getInvoiceUrl(payoutId: string): string {
   const token = getAccessToken();
   const base = process.env.NEXT_PUBLIC_API_URL || '';
   return `${base}/api/creator/payouts/${payoutId}/invoice?token=${token}`;
+}
+
+
+// ============================================================================
+// Heartbeat — alle 60s vom Frontend
+// ============================================================================
+export async function sendHeartbeat(): Promise<{ ok: boolean; session: string }> {
+  return api('/api/auth/heartbeat', { method: 'POST' });
 }
