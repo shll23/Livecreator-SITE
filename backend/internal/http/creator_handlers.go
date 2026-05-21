@@ -3,6 +3,9 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -261,3 +264,123 @@ func joinStrings(parts []string, sep string) string {
 
 // Unused warning verhindern — wir brauchen errors-Package im File
 var _ = errors.New
+
+// ============================================================================
+// PAYOUTS (Auszahlungen)
+// ============================================================================
+
+// GET /api/creator/payouts — Eigene Auszahlungs-Historie
+func (s *Server) listMyPayouts(c *fiber.Ctx) error {
+	uid := currentUserID(c)
+	role, _ := c.Locals("role").(models.UserRole)
+	ctx := c.UserContext()
+
+	if role != models.RoleCreator {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "not_a_creator"})
+	}
+
+	rows, err := s.db.Query(ctx, `
+		SELECT id, period_year, period_month, coins_earned, messages_count,
+		       amount_cents, tier_percent, status,
+		       invoice_path IS NOT NULL AS has_invoice,
+		       paid_at, created_at
+		FROM payouts
+		WHERE creator_id = $1
+		ORDER BY period_year DESC, period_month DESC
+	`, uid)
+	if err != nil {
+		return errInternal(c, err)
+	}
+	defer rows.Close()
+
+	payouts := []fiber.Map{}
+	for rows.Next() {
+		var (
+			id             uuid.UUID
+			year           int
+			month          int
+			coinsEarned    int64
+			messages       int64
+			amountCents    int64
+			tierPercent    *float64
+			status         string
+			hasInvoice     bool
+			paidAt         interface{}
+			createdAt      interface{}
+		)
+		if err := rows.Scan(&id, &year, &month, &coinsEarned, &messages,
+			&amountCents, &tierPercent, &status, &hasInvoice, &paidAt, &createdAt); err != nil {
+			return errInternal(c, err)
+		}
+		payouts = append(payouts, fiber.Map{
+			"id":              id,
+			"period_year":     year,
+			"period_month":    month,
+			"coins_earned":    coinsEarned,
+			"messages_count":  messages,
+			"amount_cents":    amountCents,
+			"tier_percent":    tierPercent,
+			"status":          status,
+			"has_invoice":     hasInvoice,
+			"paid_at":         paidAt,
+			"created_at":      createdAt,
+		})
+	}
+	return c.JSON(fiber.Map{"payouts": payouts})
+}
+
+// GET /api/creator/payouts/:id/invoice — Rechnung herunterladen
+func (s *Server) downloadMyInvoice(c *fiber.Ctx) error {
+	uid := currentUserID(c)
+	role, _ := c.Locals("role").(models.UserRole)
+	ctx := c.UserContext()
+
+	if role != models.RoleCreator {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "not_a_creator"})
+	}
+
+	payoutID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return errBadRequest(c, "invalid_payout_id")
+	}
+
+	var invoicePath *string
+	err = s.db.QueryRow(ctx, `
+		SELECT invoice_path FROM payouts
+		WHERE id = $1 AND creator_id = $2
+	`, payoutID, uid).Scan(&invoicePath)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "payout_not_found"})
+		}
+		return errInternal(c, err)
+	}
+
+	if invoicePath == nil || *invoicePath == "" {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "no_invoice"})
+	}
+
+	// Pfad muss unter STORAGE_PATH liegen (Security)
+	storageBase := os.Getenv("STORAGE_PATH")
+	if storageBase == "" {
+		storageBase = "/app/storage"
+	}
+	// invoice_path ist relativ, z.B. "invoices/2026-05/elena.pdf"
+	cleanPath := strings.TrimPrefix(*invoicePath, "/")
+	absPath := filepath.Join(storageBase, cleanPath)
+
+	// Anti-Path-Traversal Check
+	if !strings.HasPrefix(filepath.Clean(absPath), filepath.Clean(storageBase)) {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "invalid_path"})
+	}
+
+	// Datei prüfen
+	if _, err := os.Stat(absPath); err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "invoice_missing"})
+	}
+
+	// Als Download anbieten
+	filename := filepath.Base(absPath)
+	c.Set("Content-Disposition", `attachment; filename="`+filename+`"`)
+	return c.SendFile(absPath)
+}

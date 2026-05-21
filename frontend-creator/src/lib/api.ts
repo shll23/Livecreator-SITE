@@ -425,3 +425,31 @@ export async function reorderMyPhotos(photoIds: string[]): Promise<{ updated: bo
     body: JSON.stringify({ photo_ids: photoIds }),
   });
 }
+
+// ============================================================================
+// PAYOUTS (Auszahlungen)
+// ============================================================================
+
+export interface Payout {
+  id: string;
+  period_year: number;
+  period_month: number;
+  coins_earned: number;
+  messages_count: number;
+  amount_cents: number;
+  tier_percent: number | null;
+  status: 'pending' | 'paid' | 'cancelled';
+  has_invoice: boolean;
+  paid_at: string;
+  created_at: string;
+}
+
+export async function listMyPayouts(): Promise<{ payouts: Payout[] }> {
+  return api('/api/creator/payouts');
+}
+
+export function getInvoiceUrl(payoutId: string): string {
+  const token = getAccessToken();
+  const base = process.env.NEXT_PUBLIC_API_URL || '';
+  return `${base}/api/creator/payouts/${payoutId}/invoice?token=${token}`;
+}

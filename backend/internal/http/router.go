@@ -104,6 +104,8 @@ func (s *Server) SetupRouter() *fiber.App {
 	creatorGroup.Delete("/profile/photos/:id", s.deleteMyPhoto)
 	creatorGroup.Post("/profile/photos/:id/primary", s.setMyPrimaryPhoto)
 	creatorGroup.Post("/profile/photos/reorder", s.reorderMyPhotos)
+	creatorGroup.Get("/payouts", s.listMyPayouts)
+	creatorGroup.Get("/payouts/:id/invoice", s.downloadMyInvoice)
 
 	return app
 }
