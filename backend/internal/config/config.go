@@ -20,6 +20,19 @@ type Config struct {
 	CORSOrigins []string
 
 	PaymentProvider string
+
+	Mail        MailConfig
+	PublicBackendURL  string
+	PublicFrontendURL string
+}
+
+type MailConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Pass     string
+	From     string
+	FromName string
 }
 
 type DBConfig struct {
@@ -82,6 +95,16 @@ func Load() *Config {
 
 		CORSOrigins:     splitCSV(getEnv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")),
 		PaymentProvider: getEnv("PAYMENT_PROVIDER", "mock"),
+		Mail: MailConfig{
+			Host:     getEnv("SMTP_HOST", ""),
+			Port:     getEnv("SMTP_PORT", "587"),
+			User:     getEnv("SMTP_USER", ""),
+			Pass:     getEnv("SMTP_PASS", ""),
+			From:     getEnv("SMTP_FROM", "noreply@verliebdich.com"),
+			FromName: getEnv("SMTP_FROM_NAME", "verliebdich.com"),
+		},
+		PublicBackendURL:  getEnv("PUBLIC_BACKEND_URL", "https://api.verliebdich.com"),
+		PublicFrontendURL: getEnv("PUBLIC_FRONTEND_URL", "https://verliebdich.com"),
 	}
 
 	// Hard checks

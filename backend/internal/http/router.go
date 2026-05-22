@@ -65,6 +65,7 @@ func (s *Server) SetupRouter() *fiber.App {
 	authGroup.Post("/refresh", s.refresh)
 	authGroup.Post("/logout", s.logout)
 	authGroup.Get("/me", s.requireAuth, s.me)
+	authGroup.Get("/verify-email", s.verifyEmail)
 
 	// Public Creator-Listing
 	api.Get("/creators", s.listCreators)

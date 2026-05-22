@@ -214,6 +214,9 @@ func (s *Server) registerCustomer(c *fiber.Ctx) error {
 	// === PUSH an Admins: neuer Customer registriert ===
 	s.notifyAdminsNewCustomer(ctx, req.Email)
 
+	// === Verify-Mail senden (non-blocking) ===
+	go s.createAndSendVerificationEmail(context.Background(), userID, req.Email)
+
 	return s.issueTokens(c, userID, models.RoleCustomer)
 }
 

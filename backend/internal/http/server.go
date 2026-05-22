@@ -10,6 +10,7 @@ import (
 	"github.com/livecreator/backend/internal/config"
 	"github.com/livecreator/backend/internal/models"
 	"github.com/livecreator/backend/internal/payment"
+	"github.com/livecreator/backend/internal/mail"
 	"github.com/livecreator/backend/internal/push"
 	"github.com/livecreator/backend/internal/wallet"
 	"github.com/redis/go-redis/v9"
@@ -22,6 +23,7 @@ type Server struct {
 	wallet     *wallet.Service
 	payment    payment.Provider
 	pushSender *push.Sender
+	mailer     *mail.Mailer
 }
 
 func NewServer(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client, pp payment.Provider) *Server {
@@ -34,6 +36,7 @@ func NewServer(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client, pp payme
 		wallet:     wallet.NewService(db),
 		payment:    pp,
 		pushSender: sender,
+		mailer:     mail.NewMailer(cfg.Mail.Host, cfg.Mail.Port, cfg.Mail.User, cfg.Mail.Pass, cfg.Mail.From, cfg.Mail.FromName),
 	}
 }
 
